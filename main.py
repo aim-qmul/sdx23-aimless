@@ -4,6 +4,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary
 from pytorch_lightning.strategies import DDPStrategy
 
 from lightning.waveform import WaveformSeparator
+from lightning.freq_mask import MaskPredictor
 
 
 def cli_main():
