@@ -1,4 +1,8 @@
-# AIM-LESS CODEBASE
+<div align="center">
+
+<img width="400px" src="docs/aimless-logo-crop.svg">
+
+</div>
 
 ## Quick Start
 
