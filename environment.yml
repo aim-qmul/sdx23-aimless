@@ -1,0 +1,18 @@
+name: demixing
+channels:
+  - defaults
+  - pytorch
+  - nvidia
+
+dependencies:
+  - pip
+  - numpy
+  - pytorch
+  - torchaudio
+  - torchvision
+  - cudatoolkit=11.7
+  - pip:
+    - pytorch-lightning[extra]
+    - torch-optimizer
+    - musdb
+    - git+https://github.com/yoyololicon/norbert
