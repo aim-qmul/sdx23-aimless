@@ -4,7 +4,7 @@ trainer:
   logger: true
   enable_checkpointing: true
   callbacks: null
-  default_root_dir: /import/c4dm-datasets/mdx23
+  default_root_dir: null
   gradient_clip_val: null
   gradient_clip_algorithm: null
   num_nodes: 1
@@ -56,9 +56,14 @@ model:
   class_path: lightning.waveform.WaveformSeparator
   init_args:
     model: 
-      class_path: models.demucs_split.DemucsSplit
+      class_path: models.dcunet.FixedDCUNet
       init_args:
-        channels: 48
+        architecture: Large-DCUNet-20
+        stft_n_filters: 1024
+        stft_kernel_size: 1024
+        stft_stride : 256
+        sample_rate: 44100.0
+        fix_length_mode: pad
     criterion: 
       class_path: loss.time.L1Loss
     apply_transforms: true
@@ -70,7 +75,7 @@ model:
 data:
   class_path: lightning.data.MUSDB
   init_args:
-    root: /tmp/scratch/musdb18hq/
+    root: /import/c4dm-datasets-ext/musdb18hq/
     segment: 524288
     samples_per_track: 150
     random: true

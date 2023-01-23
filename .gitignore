@@ -1,2 +1,4 @@
 lightning_logs/*
 *.pyc
+env/
+models/asteroid

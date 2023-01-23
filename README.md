@@ -38,3 +38,12 @@ python main.py fit --config cfg/demucs.yaml
   * `freq_mask.MaskPredictor`: trainer for frequency-domain models.
 * `models`: your custom models.
 * `cfg`: all config files.
+
+# Development
+
+- [] Support for wandb logger
+- [] Log audio examples at end of epoch
+- [] Log more metrics (SDR)
+- [] Get functional DCUNet (multi-channel input seems non-trivial)
+- [] Are spectral losses useful (auraloss)
+- [] Add more data augmentation to dataloader

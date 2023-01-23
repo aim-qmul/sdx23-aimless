@@ -15,4 +15,5 @@ dependencies:
     - pytorch-lightning[extra]
     - torch-optimizer
     - musdb
+    - auraloss
     - git+https://github.com/yoyololicon/norbert
