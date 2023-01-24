@@ -16,6 +16,4 @@ dependencies:
     - torch-optimizer
     - musdb
     - git+https://github.com/yoyololicon/norbert
-    - pyloudnorm
-    - demucs
     - audio-data-pytorch
