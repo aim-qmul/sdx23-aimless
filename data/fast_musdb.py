@@ -110,7 +110,8 @@ class FastMUSDB(Dataset):
     def _get_track_from_chunk(self, index):
         track_idx = np.digitize(index, self.cum_chunks)
         if track_idx > 0:
-            chunk_start = (index - self.cum_chunks[track_idx - 1]) * self.segment
+            chunk_start = (
+                index - self.cum_chunks[track_idx - 1]) * self.segment
         else:
             chunk_start = index * self.segment
         return self.tracks[track_idx], chunk_start
@@ -153,6 +154,5 @@ class FastMUSDB(Dataset):
 
         y = torch.stack(stems)
         if self.transform is not None:
-            y = self.transform(y)
-            x = y.sum(0)
+            x, y = self.transform(x, y)
         return x, y
