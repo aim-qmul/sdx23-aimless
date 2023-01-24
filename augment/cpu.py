@@ -3,21 +3,24 @@ import random
 import numpy as np
 import pyloudnorm as pyln
 from pedalboard import Limiter, Pedalboard, Gain
-from typing import List
+from typing import List, Tuple
 
 
 class CPUBase(object):
-    def __call__(self, mixture: torch.Tensor, stems: torch.Tensor) -> List[torch.Tensor, torch.Tensor]:
+    def __call__(self, x: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
-            mixture (torch.Tensor): (Num_channels, L)
-            stems (torch.Tensor): (Num_sources, Num_channels, L)
+            x (Tuple[torch.Tensor, torch.Tensor]): (mixture, stems) where
+                mixture : (Num_channels, L)
+                stems: (Num_sources, Num_channels, L)
         Return:
-            mixture (torch.Tensor): (Num_channels, L)
-            stems (torch.Tensor): (Num_sources, Num_channels, L)
+            Tuple[torch.Tensor, torch.Tensor]: (mixture, stems) where
+                mixture: (Num_channels, L)
+                stems: (Num_sources, Num_channels, L)
         """
+        mixture, stems = x
         stems = self._transform(stems)
-        return stems.sum(0), stems
+        return (stems.sum(0), stems)
 
     def _transform(self, stems: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError
@@ -86,15 +89,8 @@ class LimitAug(CPUBase):
             min_release_ms, max_release_ms)
         self.meter = pyln.Meter(sample_rate)
 
-    def __call__(self, mixture: torch.Tensor, stems: torch.Tensor):
-        """
-        Args:
-            mixture (torch.Tensor): (Num_channels, L)
-            stems (torch.Tensor): (Num_sources, Num_channels, L)
-        Return:
-            mixture (torch.Tensor): (Num_channels, L)
-            stems (torch.Tensor): (Num_sources, Num_channels, L)
-        """
+    def __call__(self, x: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+        mixture, stems = x
         mixture_np = mixture.numpy().T
         loudness = self.meter.integrated_loudness(mixture_np)
         target_lufs = self.target_lufs_sampler.sample().item()
@@ -116,4 +112,4 @@ class LimitAug(CPUBase):
         new_mixture = torch.tensor(new_mixture_np.T, dtype=mixture.dtype)
         # apply element-wise gain to stems
         stems *= new_mixture.abs() / mixture.abs().add(1e-8)
-        return new_mixture, stems
+        return (new_mixture, stems)

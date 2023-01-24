@@ -154,5 +154,5 @@ class FastMUSDB(Dataset):
 
         y = torch.stack(stems)
         if self.transform is not None:
-            x, y = self.transform(x, y)
+            x, y = self.transform((x, y))
         return x, y
