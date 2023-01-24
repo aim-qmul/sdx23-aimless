@@ -37,7 +37,7 @@ class RandomSwapLR(CPUBase):
         return stems
 
 
-class RandomGain(object):
+class RandomGain(CPUBase):
     def __init__(self, low=0.25, high=1.25) -> None:
         super().__init__()
         self.low = low
@@ -66,7 +66,7 @@ def db2linear(x):
     return 10 ** (x / 20)
 
 
-class LimitAug(object):
+class LimitAug(CPUBase):
     def __init__(self,
                  target_lufs_mean=-10.887,
                  target_lufs_std=1.191,
