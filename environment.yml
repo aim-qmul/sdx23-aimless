@@ -17,3 +17,4 @@ dependencies:
     - musdb
     - git+https://github.com/yoyololicon/norbert
     - audio-data-pytorch
+    - pyloudnorm
