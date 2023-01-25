@@ -73,6 +73,15 @@ class LimitAug(CPUBase):
                  max_release_ms=200.0,
                  min_release_ms=30.0,
                  sample_rate=44100) -> None:
+        """
+        Args:
+            target_lufs_mean (float): mean of target LUFS. default: -10.887 (corresponding to the statistics of musdb-L)
+            target_lufs_std (float): std of target LUFS. default: 1.191 (corresponding to the statistics of musdb-L)
+            target_loudnorm_lufs (float): target LUFS after loudnorm. default: -14.0
+            max_release_ms (float): max release time of limiter. default: 200.0
+            min_release_ms (float): min release time of limiter. default: 30.0
+            sample_rate (int): sample rate of audio. default: 44100
+        """
         super().__init__()
         self.target_lufs_sampler = torch.distributions.Normal(
             target_lufs_mean, target_lufs_std)
