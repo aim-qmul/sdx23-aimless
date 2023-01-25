@@ -61,10 +61,6 @@ class RandomFlipPhase(RandomSwapLR):
         return stems
 
 
-def linear2db(x):
-    return 20 * torch.log10(x)
-
-
 def db2linear(x):
     return 10 ** (x / 20)
 
