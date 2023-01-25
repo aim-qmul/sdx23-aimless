@@ -26,7 +26,8 @@ class MUSDB(pl.LightningDataModule):
             transforms = Compose([
                 RandomGain(),
                 RandomSwapLR(),
-                RandomFlipPhase()
+                RandomFlipPhase(),
+                LimitAug(sample_rate=44100)
             ]) if self.hparams.apply_transforms else None
             self.train_dataset = FastMUSDB(root=self.hparams.root,
                                            subsets=['train'],
