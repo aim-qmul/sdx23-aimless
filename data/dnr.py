@@ -9,7 +9,7 @@ from tqdm import tqdm
 from typing import Optional, Callable
 
 
-__all__ = ['FastMUSDB', 'source_idx']
+__all__ = ['DnR', 'source_idx']
 
 SOURCES = ['music', 'sfx', 'speech']
 
