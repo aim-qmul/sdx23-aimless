@@ -53,7 +53,7 @@ class DnR(Dataset):
 
         self.tracks = sorted([x for x in split_root.iterdir() if x.is_dir()])
         self.track_lenghts = [torchaudio.info(
-            str(x / 'mixture.wav')).num_frames for x in tqdm(self.tracks)]
+            str(x / 'mix.wav')).num_frames for x in tqdm(self.tracks)]
 
         if self.seq_duration <= 0:
             self._size = len(self.tracks)
