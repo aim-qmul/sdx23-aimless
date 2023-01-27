@@ -32,6 +32,7 @@ class FastMUSDB(Dataset):
                  random_track_mix=False,
                  transform: Optional[Callable] = None
                  ):
+        super().__init__()
         self.root = os.path.expanduser(root)
         self.seq_duration = seq_duration
         self.subsets = subsets
