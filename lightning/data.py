@@ -1,5 +1,5 @@
 from torchvision.transforms import Compose
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 import pytorch_lightning as pl
 
 
@@ -55,6 +55,7 @@ class DnR(pl.LightningDataModule):
                  seq_duration: float = 6.0,
                  samples_per_track: int = 64,
                  random: bool = False,
+                 include_val: bool = False,
                  random_track_mix: bool = False,
                  apply_transforms: bool = False,
                  batch_size: int = 16,
@@ -78,6 +79,18 @@ class DnR(pl.LightningDataModule):
                                             random=self.hparams.random,
                                             random_track_mix=self.hparams.random_track_mix,
                                             transform=transforms)
+
+            if self.hparams.include_val:
+                self.train_dataset = ConcatDataset([
+                    self.train_dataset,
+                    DnRDataset(root=self.hparams.root,
+                               split='valid',
+                               seq_duration=self.hparams.seq_duration,
+                               samples_per_track=self.hparams.samples_per_track,
+                               random=self.hparams.random,
+                               random_track_mix=self.hparams.random_track_mix,
+                               transform=transforms)
+                ])
 
         if stage == "validate" or stage == "fit":
             self.val_dataset = DnRDataset(root=self.hparams.root,
