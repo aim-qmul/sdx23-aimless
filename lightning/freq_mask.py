@@ -7,8 +7,8 @@ from torchaudio.transforms import Spectrogram, InverseSpectrogram
 from loss.time import SDR
 from loss.freq import FLoss
 from augment.cuda import *
-from data.fast_musdb import source_idx, SOURCES
-from utils import MWF
+
+from utils import MWF, MDX_SOURCES, SDX_SOURCES
 
 
 class MaskPredictor(pl.LightningModule):
@@ -16,6 +16,7 @@ class MaskPredictor(pl.LightningModule):
                  model: nn.Module,
                  criterion: FLoss,
                  apply_transforms: bool = False,
+                 use_sdx_targets: bool = False,
                  targets: List[str] = ['vocals', 'drums', 'bass', 'other'],
                  n_fft: int = 4096,
                  hop_length: int = 1024,
@@ -36,8 +37,9 @@ class MaskPredictor(pl.LightningModule):
         ] if apply_transforms else []
 
         self.transforms = nn.Sequential(*transforms)
+        self.sources = SDX_SOURCES if use_sdx_targets else MDX_SOURCES
         self.register_buffer('targets_idx', torch.tensor(
-            sorted([source_idx(target) for target in targets])))
+            sorted([self.sources.index(target) for target in targets])))
 
     def forward(self, x):
         X = self.spec(x)
@@ -81,7 +83,7 @@ class MaskPredictor(pl.LightningModule):
             pred.view(-1, *pred.shape[-2:]), y.view(-1, *y.shape[-2:])).view(batch, -1).mean(0)
 
         for i, t in enumerate(self.targets_idx):
-            values[f'{SOURCES[t]}_sdr'] = sdrs[i].item()
+            values[f'{self.sources[t]}_sdr'] = sdrs[i].item()
         values['avg_sdr'] = sdrs.mean().item()
         return loss, values
 
