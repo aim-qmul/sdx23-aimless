@@ -68,7 +68,6 @@ class DnR(pl.LightningDataModule):
         if stage == "fit":
             transforms = Compose([
                 RandomGain(),
-                RandomSwapLR(),
                 RandomFlipPhase(),
                 LimitAug(sample_rate=44100)
             ]) if self.hparams.apply_transforms else None
