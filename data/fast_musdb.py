@@ -9,14 +9,10 @@ import torchaudio
 from tqdm import tqdm
 from typing import Optional, Callable
 
+from utils import MDX_SOURCES as SOURCES
+
 
 __all__ = ['FastMUSDB', 'source_idx']
-
-SOURCES = ['drums', 'bass', 'other', 'vocals']
-
-
-def source_idx(source):
-    return SOURCES.index(source)
 
 
 class FastMUSDB(Dataset):

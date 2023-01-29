@@ -8,14 +8,10 @@ import torchaudio
 from tqdm import tqdm
 from typing import Optional, Callable
 
+from utils import SDX_SOURCES as SOURCES
+
 
 __all__ = ['DnR', 'source_idx']
-
-SOURCES = ['music', 'sfx', 'speech']
-
-
-def source_idx(source):
-    return SOURCES.index(source)
 
 
 class DnR(Dataset):
