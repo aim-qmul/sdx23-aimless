@@ -43,6 +43,19 @@ python main.py fit --config cfg/demucs.yaml
 
 Split song in the browser with pretrained Hybrid Demucs. 
 
-``` streamlit run scripts/webapp.py ```
+```
+CUDA_VISIBLE_DEVICES=0 python -m streamlit run webapp.py \
+--server.fileWatcherType none \ 
+-- \ 
+--logdir /import/c4dm-datasets-ext/sdx-2023/logs-cjs/lightning_logs/version_0
 
-Then open [http://localhost:8501/](http://localhost:8501/) in your browser. 
+Or, use your own pretrained model. Just pass the top level log directory.
+
+```
+CUDA_VISIBLE_DEVICES=0 python -m streamlit run webapp.py \
+--server.fileWatcherType none \
+-- \
+--logdir /import/c4dm-datasets-ext/sdx-2023/logs-cjs/lightning_logs/version_0
+```
+
+Then forward port `8501` and open [http://localhost:8501/](http://localhost:8501/) in your browser. 
