@@ -19,3 +19,6 @@ dependencies:
     - pedalboard
     - audio-data-pytorch
     - pyloudnorm
+    - asteroid_filterbanks
+    - soundfile
+    - huggingface_hub
