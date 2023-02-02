@@ -111,7 +111,7 @@ def process_file(file, model: torch.nn.Module, device: torch.device):
 
     # resample if needed
     if sr != sample_rate:
-        x = torchaudio.transforms.Resample(sr, sample_rate)(x)
+        x = torchaudio.functional.resample(sr, sample_rate)(x)
 
     st.subheader("Mix")
     x_numpy = x.numpy()
