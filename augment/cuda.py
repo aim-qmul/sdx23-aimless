@@ -17,6 +17,13 @@ class CudaBase(nn.Module):
         self.rand_size = rand_size
 
     def _transform(self, stems, index):
+        """
+        Args:
+            stems (torch.Tensor): (B, Num_channels, L)
+            index (int): index of random transform
+        Return:
+            perturbed_stems (torch.Tensor): (B, Num_channels, L')
+        """
         raise NotImplementedError
 
     def forward(self, stems: torch.Tensor):
