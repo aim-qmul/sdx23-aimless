@@ -1,6 +1,8 @@
 import os
+import yaml
 import torch
 import librosa
+import argparse
 import torchaudio
 import numpy as np
 import streamlit as st
@@ -8,16 +10,15 @@ import librosa.display
 import pyloudnorm as pyln
 import matplotlib.pyplot as plt
 
+from pytorch_lightning.cli import LightningCLI
+
+from importlib import import_module
 from torchaudio.pipelines import HDEMUCS_HIGH_MUSDB_PLUS
 from torchaudio.transforms import Fade
 
-
-st.set_page_config(page_title="aimless-splitter")
-st.image("docs/aimless-logo-crop.png", use_column_width="always")
-
-bundle = HDEMUCS_HIGH_MUSDB_PLUS
-sample_rate = bundle.sample_rate
-fade_overlap = 0.1
+from lightning.waveform import WaveformSeparator
+from lightning.freq_mask import MaskPredictor
+from lightning.data import MUSDB
 
 
 @st.experimental_singleton
@@ -27,6 +28,38 @@ def load_hdemucs():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
+    return model
+
+
+# @st.experimental_singleton
+def load_checkpoint(config: str, ckpt_path: str):
+    with open(config) as f:
+        config = yaml.safe_load(f)
+
+    model_configs = config["model"]
+
+    # first build the base model
+    base_model_configs = model_configs["init_args"]["model"]
+
+    module_path, class_name = base_model_configs["class_path"].rsplit(".", 1)
+    module = import_module(module_path)
+    base_model = getattr(module, class_name)(**base_model_configs["init_args"])
+
+    # then build the criterion
+    base_criterion_configs = model_configs["init_args"]["criterion"]
+    module_path, class_name = base_criterion_configs["class_path"].rsplit(".", 1)
+    module = import_module(module_path)
+    criterion = getattr(module, class_name)()
+
+    # make final separator
+    module_path, class_name = model_configs["class_path"].rsplit(".", 1)
+    module = import_module(module_path)
+    model = getattr(module, class_name)(base_model, criterion)
+    lightning_state = torch.load(ckpt_path, map_location="cpu")
+    model_state = lightning_state["state_dict"]
+    model.load_state_dict(model_state, strict=False)
+
+    model.eval()
     return model
 
 
@@ -91,7 +124,12 @@ def separate_sources(
     return final
 
 
-def process_file(file, model: torch.nn.Module, device: torch.device):
+def process_file(
+    file,
+    model: torch.nn.Module,
+    device: torch.device,
+    sample_rate: float,
+):
     import tempfile
     import shutil
     from pathlib import Path
@@ -111,7 +149,7 @@ def process_file(file, model: torch.nn.Module, device: torch.device):
 
     # resample if needed
     if sr != sample_rate:
-        x = torchaudio.functional.resample(sr, sample_rate)(x)
+        x = torchaudio.functional.resample(x, sr, sample_rate)
 
     st.subheader("Mix")
     x_numpy = x.numpy()
@@ -142,12 +180,42 @@ def process_file(file, model: torch.nn.Module, device: torch.device):
         st.audio(audio, sample_rate=sample_rate)
 
 
-# load pretrained model
-hdemucs = load_hdemucs()
+if __name__ == "__main__":
 
-# load audio
-uploaded_file = st.file_uploader("Choose a file to demix.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--logdir",
+        help="Path to log directory with config.yaml and model checkpoint.",
+        default=None,
+    )
 
-if uploaded_file is not None:
-    # split with hdemucs
-    hdemucs_sources = process_file(uploaded_file, hdemucs, "cuda:0")
+    try:
+        args = parser.parse_args()
+    except SystemExit as e:
+        # This exception will be raised if --help or invalid command line arguments
+        # are used. Currently streamlit prevents the program from exiting normally
+        # so we have to do a hard exit.
+        os._exit(e.code)
+
+    if args.logdir is None:
+        bundle = HDEMUCS_HIGH_MUSDB_PLUS
+        sample_rate = bundle.sample_rate
+        model = load_hdemucs()  # load pretrained model
+    else:
+        ckpt_path = os.path.join(args.logdir, "checkpoints", "last.ckpt")
+        config_path = os.path.join(args.logdir, "config.yaml")
+        sample_rate = 44100
+        model = load_checkpoint(config_path, ckpt_path)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    st.set_page_config(page_title="aimless-splitter")
+    st.image("docs/aimless-logo-crop.png", use_column_width="always")
+
+    # load audio
+    uploaded_file = st.file_uploader("Choose a file to demix.")
+
+    if uploaded_file is not None:
+        # split with model
+        process_file(uploaded_file, model, "cuda:0", sample_rate)
