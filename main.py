@@ -10,17 +10,17 @@ from lightning.freq_mask import MaskPredictor
 def cli_main():
     cli = LightningCLI(
         trainer_defaults={
-            'accelerator': 'gpu',
-            'strategy': DDPStrategy(find_unused_parameters=False),
-            'log_every_n_steps': 1,
-            'callbacks': [
+            "accelerator": "gpu",
+            "strategy": DDPStrategy(find_unused_parameters=False),
+            "log_every_n_steps": 1,
+            "callbacks": [
                 ModelCheckpoint(
                     save_last=True,
                     every_n_train_steps=10000,
-                    filename='{epoch}-{step}',
+                    filename="{epoch}-{step}",
                 ),
-                ModelSummary(max_depth=2)
-            ]
+                ModelSummary(max_depth=2),
+            ],
         }
     )
 

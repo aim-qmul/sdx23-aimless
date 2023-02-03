@@ -12,7 +12,7 @@ class TLoss(torch.nn.Module):
         gt (Tensor): target time signal tensor with size (batch, *, channels, samples), `*` is an optional multi targets dimension.
         mix (Tensor): mixture time signal tensor with size (batch, channels, samples)
     Returns:
-        tuple: a length-2 tuple with the first element is the final loss tensor, 
+        tuple: a length-2 tuple with the first element is the final loss tensor,
             and the second is a dict containing any intermediate loss value you want to monitor
     """
 
@@ -26,7 +26,7 @@ class TLoss(torch.nn.Module):
 class SDR(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
-        self.expr = 'bi,bi->b'
+        self.expr = "bi,bi->b"
 
     def _batch_dot(self, x, y):
         return torch.einsum(self.expr, x, y)
@@ -40,8 +40,11 @@ class SDR(torch.nn.Module):
 
         delta = 1e-7  # avoid numerical errors
         num = self._batch_dot(references, references)
-        den = num + self._batch_dot(estimates, estimates) - \
-            2 * self._batch_dot(estimates, references)
+        den = (
+            num
+            + self._batch_dot(estimates, estimates)
+            - 2 * self._batch_dot(estimates, references)
+        )
         den = den.relu().add_(delta).log10()
         num = num.add_(delta).log10()
         return 10 * (num - den)
@@ -49,9 +52,13 @@ class SDR(torch.nn.Module):
 
 class CL1Loss(TLoss):
     def _core_loss(self, pred, gt, mix):
-        gt = gt[..., :pred.shape[-1]]
+        gt = gt[..., : pred.shape[-1]]
         loss = []
-        for c in chain(combinations(range(4), 1), combinations(range(4), 2), combinations(range(4), 3)):
+        for c in chain(
+            combinations(range(4), 1),
+            combinations(range(4), 2),
+            combinations(range(4), 3),
+        ):
             x = sum([pred[:, i] for i in c])
             y = sum([gt[:, i] for i in c])
             loss.append(F.l1_loss(x, y))
@@ -63,4 +70,4 @@ class CL1Loss(TLoss):
 
 class L1Loss(TLoss):
     def _core_loss(self, pred, gt, mix):
-        return F.l1_loss(pred, gt[..., :pred.shape[-1]]), {}
+        return F.l1_loss(pred, gt[..., : pred.shape[-1]]), {}
