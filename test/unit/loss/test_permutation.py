@@ -7,7 +7,7 @@ from loss.permutation import PITLoss
 class TestPITLoss:
     @pytest.fixture
     def inner_loss(self):
-        return lambda x, y, dims: (x - y).square().sum(dim=dims).sqrt()
+        return lambda x, y, dims: ((x - y).square().sum(dim=dims).sqrt(), dict())
 
     @pytest.fixture
     def pit_loss(self, inner_loss):
@@ -27,7 +27,7 @@ class TestPITLoss:
         # permute the rows of y
         y = x[:, [2, 0, 1]]
 
-        loss = pit_loss(x, y)
+        loss, _ = pit_loss(x, y)
         assert loss == 0.0
 
     def test_correctly_selects_permutation_across_batches(self, pit_loss):
@@ -36,18 +36,20 @@ class TestPITLoss:
         x = torch.rand(batch, channels, bin, step)
         y = x[:, torch.randperm(channels)]
 
-        loss = pit_loss(x, y)
+        loss, _ = pit_loss(x, y)
         assert loss == 0.0
 
     def test_adapts_to_differing_numbers_of_dims_before_and_after_channels(
-        self, pit_loss
+        self, inner_loss
     ):
         n_dims = 6
-        shape = torch.randint(1, 5, (n_dims,)).tolist()
-        channel_dim = 5
+        shape = torch.randint(3, 8, (n_dims,)).tolist()
+        channel_dim = 3
 
         x = torch.rand(*shape)
         y = x.index_select(channel_dim, torch.randperm(shape[channel_dim]))
 
-        loss = pit_loss(x, y)
+        pit_loss = PITLoss(inner_loss, channel_dim=channel_dim)
+
+        loss, _ = pit_loss(x, y)
         assert loss == 0.0
