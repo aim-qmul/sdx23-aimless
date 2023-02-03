@@ -29,3 +29,12 @@ class TestPITLoss:
 
         loss = pit_loss(x, y)
         assert loss == 0.0
+
+    def test_correctly_selects_permutation_across_batches(self, pit_loss):
+        batch, channels, bin, step = 11, 5, 7, 13
+
+        x = torch.rand(batch, channels, bin, step)
+        y = x[:, torch.randperm(channels)]
+
+        loss = pit_loss(x, y)
+        assert loss == 0.0
