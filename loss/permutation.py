@@ -12,7 +12,6 @@ class PITLoss(torch.nn.Module):
         self.channel_dim = channel_dim
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        # we want a distance matrix of shape (batch, channels, channels)
         batch = x.shape[0]
 
         x_ = x.unsqueeze(self.channel_dim)

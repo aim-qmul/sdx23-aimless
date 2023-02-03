@@ -38,3 +38,16 @@ class TestPITLoss:
 
         loss = pit_loss(x, y)
         assert loss == 0.0
+
+    def test_adapts_to_differing_numbers_of_dims_before_and_after_channels(
+        self, pit_loss
+    ):
+        n_dims = 6
+        shape = torch.randint(1, 5, (n_dims,)).tolist()
+        channel_dim = 5
+
+        x = torch.rand(*shape)
+        y = x.index_select(channel_dim, torch.randperm(shape[channel_dim]))
+
+        loss = pit_loss(x, y)
+        assert loss == 0.0
