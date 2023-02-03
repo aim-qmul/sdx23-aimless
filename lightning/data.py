@@ -1,11 +1,12 @@
 from torchvision.transforms import Compose
 from torch.utils.data import DataLoader, ConcatDataset
 import pytorch_lightning as pl
+from typing import List
 
 
 from data import FastMUSDB
 from data import DnR as DnRDataset
-from augment.cpu import *
+from augment.cpu import CPUBase
 
 
 class MUSDB(pl.LightningDataModule):
@@ -16,26 +17,19 @@ class MUSDB(pl.LightningDataModule):
         samples_per_track: int = 64,
         random: bool = False,
         random_track_mix: bool = False,
-        apply_transforms: bool = False,
+        transforms: List[CPUBase] = None,
         batch_size: int = 16,
     ):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters("root", "seq_duration", "samples_per_track", "random", "random_track_mix", "batch_size")
+        # manually save transforms since pedalboard is not pickleable
+        if transforms is None:
+            self.transforms = None
+        else:
+            self.transforms = Compose(transforms)
 
     def setup(self, stage=None):
         if stage == "fit":
-            transforms = (
-                Compose(
-                    [
-                        RandomGain(),
-                        RandomSwapLR(),
-                        RandomFlipPhase(),
-                        LimitAug(sample_rate=44100),
-                    ]
-                )
-                if self.hparams.apply_transforms
-                else None
-            )
             self.train_dataset = FastMUSDB(
                 root=self.hparams.root,
                 subsets=["train"],
@@ -43,7 +37,7 @@ class MUSDB(pl.LightningDataModule):
                 samples_per_track=self.hparams.samples_per_track,
                 random=self.hparams.random,
                 random_track_mix=self.hparams.random_track_mix,
-                transform=transforms,
+                transform=self.transforms,
             )
 
         if stage == "validate" or stage == "fit":
@@ -77,19 +71,19 @@ class DnR(pl.LightningDataModule):
         random: bool = False,
         include_val: bool = False,
         random_track_mix: bool = False,
-        apply_transforms: bool = False,
+        transforms: List[CPUBase] = None,
         batch_size: int = 16,
     ):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters("root", "seq_duration", "samples_per_track", "random", "include_val", "random_track_mix", "batch_size")
+        # manually save transforms since pedalboard is not pickleable
+        if transforms is None:
+            self.transforms = None
+        else:
+            self.transforms = Compose(transforms)
 
     def setup(self, stage=None):
         if stage == "fit":
-            transforms = (
-                Compose([RandomGain(), RandomFlipPhase(), LimitAug(sample_rate=44100)])
-                if self.hparams.apply_transforms
-                else None
-            )
             self.train_dataset = DnRDataset(
                 root=self.hparams.root,
                 split="train",
@@ -97,7 +91,7 @@ class DnR(pl.LightningDataModule):
                 samples_per_track=self.hparams.samples_per_track,
                 random=self.hparams.random,
                 random_track_mix=self.hparams.random_track_mix,
-                transform=transforms,
+                transform=self.transforms,
             )
 
             if self.hparams.include_val:
@@ -111,7 +105,7 @@ class DnR(pl.LightningDataModule):
                             samples_per_track=self.hparams.samples_per_track,
                             random=self.hparams.random,
                             random_track_mix=self.hparams.random_track_mix,
-                            transform=transforms,
+                            transform=self.transforms,
                         ),
                     ]
                 )
