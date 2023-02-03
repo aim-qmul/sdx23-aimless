@@ -67,7 +67,24 @@ model:
         channels: 48
     criterion: 
       class_path: loss.time.L1Loss
-    apply_transforms: true
+    transforms:
+    - class_path: augment.cuda.SpeedPerturb
+      init_args:
+        orig_freq: 44100
+        speeds: 
+        - 90
+        - 100
+        - 110
+        p: 0.2
+    - class_path: augment.cuda.RandomPitch
+      init_args:
+        semitones:
+        - -1
+        - 1
+        - 0
+        - 1
+        - 2
+        p: 0.2
     targets:
     - vocals
     - drums

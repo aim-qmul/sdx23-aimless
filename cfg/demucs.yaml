@@ -61,7 +61,6 @@ model:
         channels: 48
     criterion: 
       class_path: loss.time.L1Loss
-    apply_transforms: true
     targets:
     - vocals
     - drums
