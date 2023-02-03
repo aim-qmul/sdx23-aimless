@@ -20,6 +20,8 @@ from lightning.waveform import WaveformSeparator
 from lightning.freq_mask import MaskPredictor
 from lightning.data import MUSDB
 
+from utils import MDX_SOURCES, SDX_SOURCES
+
 
 @st.experimental_singleton
 def load_hdemucs():
@@ -40,27 +42,30 @@ def load_checkpoint(config: str, ckpt_path: str):
 
     # first build the base model
     base_model_configs = model_configs["init_args"]["model"]
-
     module_path, class_name = base_model_configs["class_path"].rsplit(".", 1)
     module = import_module(module_path)
     base_model = getattr(module, class_name)(**base_model_configs["init_args"])
 
-    # then build the criterion
-    base_criterion_configs = model_configs["init_args"]["criterion"]
-    module_path, class_name = base_criterion_configs["class_path"].rsplit(".", 1)
-    module = import_module(module_path)
-    criterion = getattr(module, class_name)()
-
-    # make final separator
-    module_path, class_name = model_configs["class_path"].rsplit(".", 1)
-    module = import_module(module_path)
-    model = getattr(module, class_name)(base_model, criterion)
+    # load weights from checkpoint
     lightning_state = torch.load(ckpt_path, map_location="cpu")
     model_state = lightning_state["state_dict"]
-    model.load_state_dict(model_state, strict=False)
 
-    model.eval()
-    return model
+    # parse out weights only for the base model
+    base_model_state = {}
+    for key, val in model_state.items():
+        if "model" in key:
+            base_model_state[key.replace("model.", "")] = val
+    base_model.load_state_dict(base_model_state, strict=True)
+
+    # use default source ordering from utils
+    if config["model"]["init_args"]["use_sdx_targets"]:
+        sources = SDX_SOURCES
+    else:
+        sources = MDX_SOURCES
+
+    base_model.sources = sources
+    base_model.eval()
+    return base_model
 
 
 def plot_spectrogram(y, *, sample_rate, figsize=(12, 3)):
@@ -163,14 +168,13 @@ def process_file(
     waveform = (waveform - ref.mean()) / ref.std()  # normalization
     sources = separate_sources(
         model,
-        waveform[None],
+        waveform.unsqueeze(0),
         device=device,
     )[0]
     sources = sources * ref.std() + ref.mean()
 
     sources_list = model.sources
     sources = list(sources)
-
     audios = dict(zip(sources_list, sources))
 
     for source, audio in audios.items():
@@ -184,8 +188,13 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--logdir",
-        help="Path to log directory with config.yaml and model checkpoint.",
+        "--config",
+        help="Path to YAML configuration.",
+        default=None,
+    )
+    parser.add_argument(
+        "--ckpt_path",
+        help="Path to pretrained checkpoint with model weights.",
         default=None,
     )
 
@@ -197,15 +206,13 @@ if __name__ == "__main__":
         # so we have to do a hard exit.
         os._exit(e.code)
 
-    if args.logdir is None:
+    if args.config is None:
         bundle = HDEMUCS_HIGH_MUSDB_PLUS
         sample_rate = bundle.sample_rate
         model = load_hdemucs()  # load pretrained model
     else:
-        ckpt_path = os.path.join(args.logdir, "checkpoints", "last.ckpt")
-        config_path = os.path.join(args.logdir, "config.yaml")
         sample_rate = 44100
-        model = load_checkpoint(config_path, ckpt_path)
+        model = load_checkpoint(args.config, args.ckpt_path)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -218,4 +225,4 @@ if __name__ == "__main__":
 
     if uploaded_file is not None:
         # split with model
-        process_file(uploaded_file, model, "cuda:0", sample_rate)
+        process_file(uploaded_file, model, device, sample_rate)
