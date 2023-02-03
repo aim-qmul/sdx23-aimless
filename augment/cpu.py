@@ -5,6 +5,8 @@ import pyloudnorm as pyln
 from pedalboard import Limiter, Pedalboard, Gain
 from typing import List, Tuple
 
+__all__ = ["RandomSwapLR", "RandomGain", "RandomFlipPhase", "LimitAug", "CPUBase"]
+
 
 class CPUBase(object):
     def __call__(
