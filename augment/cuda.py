@@ -117,11 +117,9 @@ class RandomPitch(CudaBase):
 
 
 class RandomConvolutions(CudaBase):
-    def __init__(self,
-                 target_sr: int,
-                 ir_folder: str, **kwargs):
+    def __init__(self, target_sr: int, ir_folder: str, **kwargs):
         ir_folder = Path(ir_folder)
-        ir_files = list(ir_folder.glob('**/*.wav'))
+        ir_files = list(ir_folder.glob("**/*.wav"))
         impulses = []
         for ir_file in ir_files:
             ir, sr = torchaudio.load(ir_file)
@@ -135,10 +133,10 @@ class RandomConvolutions(CudaBase):
 
         super().__init__(len(impulses), **kwargs)
         for i, impulse in enumerate(impulses):
-            self.register_buffer(f'impulse_{i}', impulse)
+            self.register_buffer(f"impulse_{i}", impulse)
 
     def _transform(self, stems, index):
-        ir = self.get_buffer(f'impulse_{index}').unsqueeze(1)
+        ir = self.get_buffer(f"impulse_{index}").unsqueeze(1)
         ir_flipped = ir.flip(-1)
         padded_stems = F.pad(stems, (ir.shape[-1] - 1, 0))
         # TODO: dynamically use F.conv1d if impulse is short
