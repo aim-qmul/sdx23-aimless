@@ -6,7 +6,7 @@ from torchaudio.transforms import Spectrogram, InverseSpectrogram
 
 from loss.time import SDR
 from loss.freq import FLoss
-from augment.cuda import *
+from augment.cuda import CudaBase
 
 from utils import MWF, MDX_SOURCES, SDX_SOURCES
 
@@ -16,7 +16,7 @@ class MaskPredictor(pl.LightningModule):
         self,
         model: nn.Module,
         criterion: FLoss,
-        apply_transforms: bool = False,
+        transforms: List[CudaBase] = None,
         use_sdx_targets: bool = False,
         targets: List[str] = ["vocals", "drums", "bass", "other"],
         n_fft: int = 4096,
@@ -31,16 +31,10 @@ class MaskPredictor(pl.LightningModule):
         self.mwf = MWF(**mwf_kwargs)
         self.spec = Spectrogram(n_fft=n_fft, hop_length=hop_length, power=None)
         self.inv_spec = InverseSpectrogram(n_fft=n_fft, hop_length=hop_length)
-
-        transforms = (
-            [
-                RandomPitch(),
-                SpeedPerturb(),
-            ]
-            if apply_transforms
-            else []
-        )
-
+        
+        if transforms is None:
+            transforms = []
+        
         self.transforms = nn.Sequential(*transforms)
         self.sources = SDX_SOURCES if use_sdx_targets else MDX_SOURCES
         self.register_buffer(

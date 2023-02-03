@@ -70,7 +70,24 @@ model:
         n_fft: 4096
         hop_length: 1024
         n_iter: 1
-    apply_transforms: true
+    transforms:
+    - class_path: augment.cuda.SpeedPerturb
+      init_args:
+        orig_freq: 44100
+        speeds: 
+        - 90
+        - 100
+        - 110
+        p: 0.2
+    - class_path: augment.cuda.RandomPitch
+      init_args:
+        semitones:
+        - -1
+        - 1
+        - 0
+        - 1
+        - 2
+        p: 0.2
     targets:
     - vocals
     - drums
