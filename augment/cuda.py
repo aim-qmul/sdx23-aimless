@@ -7,7 +7,7 @@ from torchaudio import functional as aF
 from torch_fftconv import fft_conv1d
 from pathlib import Path
 
-__all__ = ['SpeedPerturb', 'RandomPitch', 'RandomConvolutions']
+__all__ = ["SpeedPerturb", "RandomPitch", "RandomConvolutions"]
 
 
 class CudaBase(nn.Module):
@@ -45,15 +45,15 @@ class CudaBase(nn.Module):
         perturbed_stems[~select_mask] = stems[~select_mask]
         selected_stems = stems[select_mask]
         rand_idx = torch.randint(
-            self.rand_size, (selected_stems.shape[0],), device=stems.device)
+            self.rand_size, (selected_stems.shape[0],), device=stems.device
+        )
 
         for i in range(self.rand_size):
             mask = rand_idx == i
             if not torch.any(mask):
                 continue
             masked_stems = selected_stems[mask]
-            perturbed_audio = self._transform(
-                masked_stems, i).to(perturbed_stems.dtype)
+            perturbed_audio = self._transform(masked_stems, i).to(perturbed_stems.dtype)
 
             diff = perturbed_audio.shape[-1] - orig_len
 
@@ -61,16 +61,14 @@ class CudaBase(nn.Module):
             if diff >= 0:
                 perturbed_stems[put_idx] = perturbed_audio[..., :orig_len]
             else:
-                perturbed_stems[put_idx, :, :orig_len+diff] = perturbed_audio
+                perturbed_stems[put_idx, :, : orig_len + diff] = perturbed_audio
 
         perturbed_stems = perturbed_stems.view(*shape)
         return perturbed_stems
 
 
 class SpeedPerturb(CudaBase):
-    def __init__(
-        self, orig_freq=44100, speeds=[90, 100, 110], **kwargs
-    ):
+    def __init__(self, orig_freq=44100, speeds=[90, 100, 110], **kwargs):
         super().__init__(len(speeds), **kwargs)
         self.orig_freq = orig_freq
         self.resamplers = nn.ModuleList()
@@ -80,8 +78,9 @@ class SpeedPerturb(CudaBase):
             self.resamplers.append(Resample(self.orig_freq, new_freq))
 
     def _transform(self, stems, index):
-        y = self.resamplers[index](
-            stems.view(-1, stems.shape[-1])).view(*stems.shape[:-1], -1)
+        y = self.resamplers[index](stems.view(-1, stems.shape[-1])).view(
+            *stems.shape[:-1], -1
+        )
         return y
 
 
@@ -99,7 +98,7 @@ class RandomPitch(CudaBase):
         rrates[rrates % 2 == 1] += 1
         rates = 100 / rrates
 
-        self.register_buffer('rates', rates)
+        self.register_buffer("rates", rates)
         self.spec = Spectrogram(n_fft=n_fft, hop_length=hop_length, power=None)
         self.inv_spec = InverseSpectrogram(n_fft=n_fft, hop_length=hop_length)
         self.stretcher = TimeStretch(hop_length, n_freq=n_fft // 2 + 1)
@@ -112,7 +111,8 @@ class RandomPitch(CudaBase):
         stretched_spec = self.stretcher(spec, self.rates[index])
         stretched_stems = self.inv_spec(stretched_spec)
         shifted_stems = self.resamplers[index](
-            stretched_stems.view(-1, stretched_stems.shape[-1])).view(*stretched_stems.shape[:-1], -1)
+            stretched_stems.view(-1, stretched_stems.shape[-1])
+        ).view(*stretched_stems.shape[:-1], -1)
         return shifted_stems
 
 
