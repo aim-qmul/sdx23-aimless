@@ -31,10 +31,10 @@ class MaskPredictor(pl.LightningModule):
         self.mwf = MWF(**mwf_kwargs)
         self.spec = Spectrogram(n_fft=n_fft, hop_length=hop_length, power=None)
         self.inv_spec = InverseSpectrogram(n_fft=n_fft, hop_length=hop_length)
-        
+
         if transforms is None:
             transforms = []
-        
+
         self.transforms = nn.Sequential(*transforms)
         self.sources = SDX_SOURCES if use_sdx_targets else MDX_SOURCES
         self.register_buffer(

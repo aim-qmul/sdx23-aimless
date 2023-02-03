@@ -21,7 +21,14 @@ class MUSDB(pl.LightningDataModule):
         batch_size: int = 16,
     ):
         super().__init__()
-        self.save_hyperparameters("root", "seq_duration", "samples_per_track", "random", "random_track_mix", "batch_size")
+        self.save_hyperparameters(
+            "root",
+            "seq_duration",
+            "samples_per_track",
+            "random",
+            "random_track_mix",
+            "batch_size",
+        )
         # manually save transforms since pedalboard is not pickleable
         if transforms is None:
             self.transforms = None
@@ -75,7 +82,15 @@ class DnR(pl.LightningDataModule):
         batch_size: int = 16,
     ):
         super().__init__()
-        self.save_hyperparameters("root", "seq_duration", "samples_per_track", "random", "include_val", "random_track_mix", "batch_size")
+        self.save_hyperparameters(
+            "root",
+            "seq_duration",
+            "samples_per_track",
+            "random",
+            "include_val",
+            "random_track_mix",
+            "batch_size",
+        )
         # manually save transforms since pedalboard is not pickleable
         if transforms is None:
             self.transforms = None
