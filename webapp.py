@@ -163,6 +163,13 @@ def process_file(
 
     waveform = x.to(device)
 
+    # If mono, make stereo
+    if x.shape[0] == 1:
+        x = x.repeat(2, 1)
+    # Otherwise just take first 2 channels
+    elif x.shape[0] > 2:
+        x = x[:2]
+
     # split into 10.0 sec chunks
     ref = waveform.mean(0)
     waveform = (waveform - ref.mean()) / ref.std()  # normalization
