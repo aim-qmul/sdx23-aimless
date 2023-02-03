@@ -74,7 +74,13 @@ data:
     samples_per_track: 150
     random: true
     random_track_mix: true
-    apply_transforms: true
+    transforms:
+    - class_path: augment.cpu.RandomGain
+    - class_path: augment.cpu.RandomFlipPhase
+    - class_path: augment.cpu.RandomSwapLR
+    - class_path: augment.cpu.LimitAug
+      init_args:
+        sample_rate: 44100
     batch_size: 4
 optimizer:
   class_path: torch.optim.Adam
