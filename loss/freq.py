@@ -17,7 +17,7 @@ class FLoss(torch.nn.Module):
         gt (Tensor): target time signal tensor with size (batch, *, channels, samples), `*` is an optional multi targets dimension.
         mix (Tensor): mixture time signal tensor with size (batch, channels, samples)
     Returns:
-        tuple: a length-2 tuple with the first element is the final loss tensor, 
+        tuple: a length-2 tuple with the first element is the final loss tensor,
             and the second is a dict containing any intermediate loss value you want to monitor
     """
 
@@ -29,7 +29,9 @@ class FLoss(torch.nn.Module):
 
 
 class CLoss(FLoss):
-    def __init__(self, mcoeff=10, n_fft=4096, hop_length=1024, complex_mse=True, **mwf_kwargs):
+    def __init__(
+        self, mcoeff=10, n_fft=4096, hop_length=1024, complex_mse=True, **mwf_kwargs
+    ):
         super().__init__()
         self.mcoeff = mcoeff
         self.inv_spec = InverseSpectrogram(n_fft=n_fft, hop_length=hop_length)
@@ -38,7 +40,7 @@ class CLoss(FLoss):
             self.mwf = MWF(**mwf_kwargs)
 
     def _core_loss(self, msk_hat, gt_spec, mix_spec, gt, mix):
-        if hasattr(self, 'mwf'):
+        if hasattr(self, "mwf"):
             Y = self.mwf(msk_hat, mix_spec)
         else:
             Y = msk_hat * mix_spec.unsqueeze(1)
@@ -49,10 +51,7 @@ class CLoss(FLoss):
             loss_f = real_mse_loss(msk_hat, gt_spec.abs(), mix_spec.abs())
         loss_t = sdr_loss(pred, gt, mix)
         loss = loss_f + self.mcoeff * loss_t
-        return loss, {
-            "loss_f": loss_f.item(),
-            "loss_t": loss_t.item()
-        }
+        return loss, {"loss_f": loss_f.item(), "loss_t": loss_t.item()}
 
 
 class MDLoss(FLoss):
@@ -80,10 +79,7 @@ class MDLoss(FLoss):
 
         loss_t = _sdr_loss_core(pred, gt, mix) + 1.0
         loss = loss_f + self.mcoeff * loss_t
-        return loss, {
-            "loss_f": loss_f.item(),
-            "loss_t": loss_t.item()
-        }
+        return loss, {"loss_f": loss_f.item(), "loss_t": loss_t.item()}
 
 
 def bce_loss(msk_hat, gt_spec):
@@ -92,7 +88,9 @@ def bce_loss(msk_hat, gt_spec):
     gt_spec_power = gt_spec.abs()
     gt_spec_power *= gt_spec_power
     divider = gt_spec_power.sum(1) + 1e-10
-    for c in chain(combinations(range(4), 1), combinations(range(4), 2), combinations(range(4), 3)):
+    for c in chain(
+        combinations(range(4), 1), combinations(range(4), 2), combinations(range(4), 3)
+    ):
         m = sum([msk_hat[:, i] for i in c])
         gt = sum([gt_spec_power[:, i] for i in c]) / divider
         loss.append(F.binary_cross_entropy(m, gt))
@@ -107,7 +105,9 @@ def complex_mse_loss(y_hat: torch.Tensor, gt_spec: torch.Tensor):
     assert gt_spec.is_complex() and y_hat.is_complex()
 
     loss = []
-    for c in chain(combinations(range(4), 1), combinations(range(4), 2), combinations(range(4), 3)):
+    for c in chain(
+        combinations(range(4), 1), combinations(range(4), 2), combinations(range(4), 3)
+    ):
         m = sum([y_hat[:, i] for i in c])
         gt = sum([gt_spec[:, i] for i in c])
         diff = m - gt
@@ -123,12 +123,17 @@ def complex_mse_loss(y_hat: torch.Tensor, gt_spec: torch.Tensor):
 
 def real_mse_loss(msk_hat: torch.Tensor, gt_spec: torch.Tensor, mix_spec: torch.Tensor):
     assert msk_hat.shape == gt_spec.shape
-    assert msk_hat.is_floating_point() and gt_spec.is_floating_point(
-    ) and mix_spec.is_floating_point()
+    assert (
+        msk_hat.is_floating_point()
+        and gt_spec.is_floating_point()
+        and mix_spec.is_floating_point()
+    )
     assert not gt_spec.is_complex() and not mix_spec.is_complex()
 
     loss = []
-    for c in chain(combinations(range(4), 1), combinations(range(4), 2), combinations(range(4), 3)):
+    for c in chain(
+        combinations(range(4), 1), combinations(range(4), 2), combinations(range(4), 3)
+    ):
         m = sum([msk_hat[:, i] for i in c])
         gt = sum([gt_spec[:, i] for i in c])
         loss.append(F.mse_loss(m * mix_spec, gt))
@@ -142,8 +147,10 @@ def sdr_loss(pred, gt_time, mix):
     # SDR-Combination Loss
 
     batch_size, _, n_channels, length = pred.shape
-    pred, gt_time = pred.transpose(
-        0, 1).contiguous(), gt_time.transpose(0, 1).contiguous()
+    pred, gt_time = (
+        pred.transpose(0, 1).contiguous(),
+        gt_time.transpose(0, 1).contiguous(),
+    )
 
     # Fix Length
     mix = mix[..., :length].reshape(-1, length)
@@ -179,8 +186,12 @@ def _sdr_loss_core(x_hat, x, y):
     x_hat_norm = x_hat[:, None, :] @ x_hat[:, :, None]
     x_cross = x[:, None, :] @ x_hat[:, :, None]
 
-    x_norm, x_hat_norm, ns_norm, ns_hat_norm = x_norm.relu(
-    ), x_hat_norm.relu(), ns_norm.relu(), ns_hat_norm.relu()
+    x_norm, x_hat_norm, ns_norm, ns_hat_norm = (
+        x_norm.relu(),
+        x_hat_norm.relu(),
+        ns_norm.relu(),
+        ns_hat_norm.relu(),
+    )
 
     alpha = x_norm / (ns_norm + x_norm + 1e-10)
 
