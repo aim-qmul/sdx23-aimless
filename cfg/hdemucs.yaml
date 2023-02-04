@@ -92,6 +92,21 @@ data:
     root: /import/c4dm-datasets-ext/musdb18hq/
     seq_duration: 10.0
     samples_per_track: 500
+    effects: 
+      class_path: augment.effects.RandomAudioEffectsChannel
+      init_args:
+        sample_rate: 44100
+        parametric_eq_prob: 0.7
+        distortion_prob: 0.01
+        delay_prob: 0.1
+        chorus_prob: 0.01
+        phaser_prob: 0.01
+        compressor_prob: 0.4
+        reverb_prob: 0.2
+        stereo_widener_prob: 0.3
+        limiter_prob: 0.3
+        vol_automation_prob: 0.7
+        target_lufs_db: -32.0
     transforms:
     - class_path: augment.cpu.RandomGain
     - class_path: augment.cpu.RandomFlipPhase
