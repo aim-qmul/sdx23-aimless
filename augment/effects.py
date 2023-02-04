@@ -260,22 +260,23 @@ class RandomVolumeAutomation(torch.nn.Module):
     def __init__(
         self,
         sample_rate: float,
-        min_segments: int = 1,
-        max_segments: int = 3,
+        min_segment_seconds: float = 3.0,
         min_gain_db: float = -6.0,
         max_gain_db: float = 6.0,
     ) -> None:
         super().__init__()
         self.sample_rate = sample_rate
-        self.min_segments = min_segments
-        self.max_segments = max_segments
+        self.min_segment_seconds = min_segment_seconds
         self.min_gain_db = min_gain_db
         self.max_gain_db = max_gain_db
 
     def forward(self, x: torch.Tensor):
         gain_db = torch.zeros(x.shape[-1]).type_as(x)
 
-        num_segments = randint(self.min_segments, self.max_segments)
+        seconds = x.shape[-1] / self.sample_rate
+        max_num_segments = int(seconds // self.min_segment_seconds)
+
+        num_segments = randint(1, max_num_segments)
         segment_lengths = (
             x.shape[-1]
             * np.random.dirichlet([rand(0, 10) for _ in range(num_segments)], 1)
