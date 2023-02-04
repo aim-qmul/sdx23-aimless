@@ -62,11 +62,7 @@ model:
     criterion: 
       class_path: loss.time.L1Loss
     apply_transforms: true
-    targets:
-    - vocals
-    - drums
-    - bass
-    - other
+    targets: {vocals, drums, bass, other}
 data:
   class_path: lightning.data.MUSDB
   init_args:

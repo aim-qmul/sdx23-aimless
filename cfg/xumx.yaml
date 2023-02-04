@@ -71,11 +71,7 @@ model:
         hop_length: 1024
         n_iter: 1
     apply_transforms: true
-    targets:
-    - vocals
-    - drums
-    - bass
-    - other
+    targets: {vocals, drums, bass, other}
     n_fft: 4096
     hop_length: 1024
     residual_model: false
