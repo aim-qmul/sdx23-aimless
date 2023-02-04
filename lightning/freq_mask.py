@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import torch
 from torch import nn
-from typing import List
+from typing import List, Dict
 from torchaudio.transforms import Spectrogram, InverseSpectrogram
 
 from loss.time import SDR
@@ -18,7 +18,7 @@ class MaskPredictor(pl.LightningModule):
         criterion: FLoss,
         apply_transforms: bool = False,
         use_sdx_targets: bool = False,
-        targets: List[str] = ["vocals", "drums", "bass", "other"],
+        targets: Dict[str, None] = {},
         n_fft: int = 4096,
         hop_length: int = 1024,
         **mwf_kwargs,
