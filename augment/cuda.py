@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torchaudio.transforms import TimeStretch, Spectrogram, InverseSpectrogram, Resample
 
-__all__ = ["SpeedPerturb", "RandomPitch"]
+__all__ = ["SpeedPerturb", "RandomPitch", "CudaBase"]
 
 
 class CudaBase(nn.Module):

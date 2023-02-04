@@ -67,7 +67,24 @@ model:
         channels: 48
     criterion: 
       class_path: loss.time.L1Loss
-    apply_transforms: true
+    transforms:
+    - class_path: augment.cuda.SpeedPerturb
+      init_args:
+        orig_freq: 44100
+        speeds: 
+        - 90
+        - 100
+        - 110
+        p: 0.2
+    - class_path: augment.cuda.RandomPitch
+      init_args:
+        semitones:
+        - -1
+        - 1
+        - 0
+        - 1
+        - 2
+        p: 0.2
     targets: {vocals, drums, bass, other}
 data:
   class_path: lightning.data.MUSDB
@@ -75,9 +92,15 @@ data:
     root: /import/c4dm-datasets-ext/musdb18hq/
     seq_duration: 10.0
     samples_per_track: 500
+    transforms:
+    - class_path: augment.cpu.RandomGain
+    - class_path: augment.cpu.RandomFlipPhase
+    - class_path: augment.cpu.RandomSwapLR
+    - class_path: augment.cpu.LimitAug
+      init_args:
+        sample_rate: 44100
     random: true
     random_track_mix: true
-    apply_transforms: true
     batch_size: 4
 optimizer:
   class_path: torch.optim.Adam
