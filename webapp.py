@@ -193,6 +193,9 @@ def process_file(
 
 if __name__ == "__main__":
 
+    st.set_page_config(page_title="aimless-splitter")
+    st.image("docs/aimless-logo-crop.png", use_column_width="always")
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
@@ -223,9 +226,6 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
-
-    st.set_page_config(page_title="aimless-splitter")
-    st.image("docs/aimless-logo-crop.png", use_column_width="always")
 
     # load audio
     uploaded_file = st.file_uploader("Choose a file to demix.")
