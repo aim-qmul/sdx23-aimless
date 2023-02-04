@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import torch
 from torch import nn
-from typing import List
+from typing import List, Dict
 
 from loss.time import TLoss, SDR
 from augment.cuda import *
@@ -16,7 +16,7 @@ class WaveformSeparator(pl.LightningModule):
         criterion: TLoss,
         apply_transforms: bool = False,
         use_sdx_targets: bool = False,
-        targets: List[str] = ["vocals", "drums", "bass", "other"],
+        targets: Dict[str, None] = {},
     ):
         super().__init__()
 
