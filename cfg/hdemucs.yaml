@@ -85,11 +85,7 @@ model:
         - 1
         - 2
         p: 0.2
-    targets:
-    - vocals
-    - drums
-    - bass
-    - other
+    targets: {vocals, drums, bass, other}
 data:
   class_path: lightning.data.MUSDB
   init_args:

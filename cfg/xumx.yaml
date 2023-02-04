@@ -88,11 +88,7 @@ model:
         - 1
         - 2
         p: 0.2
-    targets:
-    - vocals
-    - drums
-    - bass
-    - other
+    targets: {vocals, drums, bass, other}
     n_fft: 4096
     hop_length: 1024
     residual_model: false

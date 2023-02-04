@@ -61,11 +61,7 @@ model:
         channels: 48
     criterion: 
       class_path: loss.time.L1Loss
-    targets:
-    - vocals
-    - drums
-    - bass
-    - other
+    targets: {vocals, drums, bass, other}
 data:
   class_path: lightning.data.MUSDB
   init_args:
