@@ -1,10 +1,10 @@
 import pytorch_lightning as pl
 import torch
 from torch import nn
-from typing import List
+from typing import List, Dict
 
 from loss.time import TLoss, SDR
-from augment.cuda import *
+from augment.cuda import CudaBase
 
 from utils import MDX_SOURCES, SDX_SOURCES
 
@@ -14,9 +14,9 @@ class WaveformSeparator(pl.LightningModule):
         self,
         model: nn.Module,
         criterion: TLoss,
-        apply_transforms: bool = False,
+        transforms: List[CudaBase] = None,
         use_sdx_targets: bool = False,
-        targets: List[str] = ["vocals", "drums", "bass", "other"],
+        targets: Dict[str, None] = {},
     ):
         super().__init__()
 
@@ -24,14 +24,8 @@ class WaveformSeparator(pl.LightningModule):
         self.criterion = criterion
         self.sdr = SDR()
 
-        transforms = (
-            [
-                RandomPitch(),
-                SpeedPerturb(),
-            ]
-            if apply_transforms
-            else []
-        )
+        if transforms is None:
+            transforms = []
 
         self.sources = SDX_SOURCES if use_sdx_targets else MDX_SOURCES
 

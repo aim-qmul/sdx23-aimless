@@ -7,7 +7,7 @@ from torchaudio import functional as aF
 from torch_fftconv import fft_conv1d
 from pathlib import Path
 
-__all__ = ["SpeedPerturb", "RandomPitch", "RandomConvolutions"]
+__all__ = ["SpeedPerturb", "RandomPitch", "RandomConvolutions", "CudaBase"]
 
 
 class CudaBase(nn.Module):
