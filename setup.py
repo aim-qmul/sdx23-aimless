@@ -3,10 +3,10 @@ import setuptools
 setuptools.setup(
     name="aimless",
     version="0.0.1",
-    author="AIM",
+    author="Artificial Intelligence and Music League for Effective Source Separation",
     author_email="chin-yun.yu@qmul.ac.uk",
-    packages=setuptools.find_packages(),
-    install_requires=['torch'],
+    packages=setuptools.find_packages(exclude=["tests", "tests.*", "data", "data.*"]),
+    install_requires=["torch", "pytorch-lightning"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
