@@ -53,17 +53,17 @@ trainer:
   inference_mode: true
 ckpt_path: null
 model:
-  class_path: lightning.waveform.WaveformSeparator
+  class_path: aimless.lightning.waveform.WaveformSeparator
   init_args:
     model: 
-      class_path: models.demucs_split.DemucsSplit
+      class_path: aimless.models.demucs_split.DemucsSplit
       init_args:
         channels: 48
     criterion: 
-      class_path: loss.time.L1Loss
+      class_path: aimless.loss.time.L1Loss
     targets: {vocals, drums, bass, other}
 data:
-  class_path: lightning.data.MUSDB
+  class_path: data.lightning.MUSDB
   init_args:
     root: /import/c4dm-datasets-ext/musdb18hq/
     seq_duration: 10.0
@@ -71,10 +71,10 @@ data:
     random: true
     random_track_mix: true
     transforms:
-    - class_path: augment.cpu.RandomGain
-    - class_path: augment.cpu.RandomFlipPhase
-    - class_path: augment.cpu.RandomSwapLR
-    - class_path: augment.cpu.LimitAug
+    - class_path: aimless.augment.cpu.RandomGain
+    - class_path: aimless.augment.cpu.RandomFlipPhase
+    - class_path: aimless.augment.cpu.RandomSwapLR
+    - class_path: aimless.augment.cpu.LimitAug
       init_args:
         sample_rate: 44100
     batch_size: 4
