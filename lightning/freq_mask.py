@@ -1,27 +1,28 @@
 import pytorch_lightning as pl
 import torch
 from torch import nn
-from typing import List
+from typing import List, Dict
 from torchaudio.transforms import Spectrogram, InverseSpectrogram
 
 from loss.time import SDR
 from loss.freq import FLoss
-from augment.cuda import *
+from augment.cuda import CudaBase
 
 from utils import MWF, MDX_SOURCES, SDX_SOURCES
 
 
 class MaskPredictor(pl.LightningModule):
-    def __init__(self,
-                 model: nn.Module,
-                 criterion: FLoss,
-                 apply_transforms: bool = False,
-                 use_sdx_targets: bool = False,
-                 targets: List[str] = ['vocals', 'drums', 'bass', 'other'],
-                 n_fft: int = 4096,
-                 hop_length: int = 1024,
-                 **mwf_kwargs
-                 ):
+    def __init__(
+        self,
+        model: nn.Module,
+        criterion: FLoss,
+        transforms: List[CudaBase] = None,
+        use_sdx_targets: bool = False,
+        targets: Dict[str, None] = {},
+        n_fft: int = 4096,
+        hop_length: int = 1024,
+        **mwf_kwargs,
+    ):
         super().__init__()
 
         self.model = model
@@ -31,15 +32,15 @@ class MaskPredictor(pl.LightningModule):
         self.spec = Spectrogram(n_fft=n_fft, hop_length=hop_length, power=None)
         self.inv_spec = InverseSpectrogram(n_fft=n_fft, hop_length=hop_length)
 
-        transforms = [
-            RandomPitch(),
-            SpeedPerturb(),
-        ] if apply_transforms else []
+        if transforms is None:
+            transforms = []
 
         self.transforms = nn.Sequential(*transforms)
         self.sources = SDX_SOURCES if use_sdx_targets else MDX_SOURCES
-        self.register_buffer('targets_idx', torch.tensor(
-            sorted([self.sources.index(target) for target in targets])))
+        self.register_buffer(
+            "targets_idx",
+            torch.tensor(sorted([self.sources.index(target) for target in targets])),
+        )
 
     def forward(self, x):
         X = self.spec(x)
@@ -62,7 +63,7 @@ class MaskPredictor(pl.LightningModule):
         pred_mask = self.model(X_mag)
         loss, values = self.criterion(pred_mask, Y, X, y, x)
 
-        values['loss'] = loss
+        values["loss"] = loss
         self.log_dict(values, prog_bar=False, sync_dist=True)
         return loss
 
@@ -79,12 +80,15 @@ class MaskPredictor(pl.LightningModule):
         pred = self.inv_spec(self.mwf(pred_mask, X))
 
         batch = pred.shape[0]
-        sdrs = self.sdr(
-            pred.view(-1, *pred.shape[-2:]), y.view(-1, *y.shape[-2:])).view(batch, -1).mean(0)
+        sdrs = (
+            self.sdr(pred.view(-1, *pred.shape[-2:]), y.view(-1, *y.shape[-2:]))
+            .view(batch, -1)
+            .mean(0)
+        )
 
         for i, t in enumerate(self.targets_idx):
-            values[f'{self.sources[t]}_sdr'] = sdrs[i].item()
-        values['avg_sdr'] = sdrs.mean().item()
+            values[f"{self.sources[t]}_sdr"] = sdrs[i].item()
+        values["avg_sdr"] = sdrs.mean().item()
         return loss, values
 
     def validation_epoch_end(self, outputs) -> None:
@@ -93,5 +97,5 @@ class MaskPredictor(pl.LightningModule):
         for k in outputs[0][1].keys():
             avg_values[k] = sum(x[1][k] for x in outputs) / len(outputs)
 
-        self.log('val_loss', avg_loss, prog_bar=True, sync_dist=True)
+        self.log("val_loss", avg_loss, prog_bar=True, sync_dist=True)
         self.log_dict(avg_values, prog_bar=False, sync_dist=True)

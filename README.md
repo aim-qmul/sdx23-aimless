@@ -38,3 +38,11 @@ python main.py fit --config cfg/demucs.yaml
   * `freq_mask.MaskPredictor`: trainer for frequency-domain models.
 * `models`: your custom models.
 * `cfg`: all config files.
+
+## Streamlit
+
+Split song in the browser with pretrained Hybrid Demucs. 
+
+``` streamlit run scripts/webapp.py ```
+
+Then open [http://localhost:8501/](http://localhost:8501/) in your browser. 

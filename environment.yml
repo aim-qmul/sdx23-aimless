@@ -19,3 +19,5 @@ dependencies:
     - pedalboard
     - audio-data-pytorch
     - pyloudnorm
+    - streamlit 
+    - librosa

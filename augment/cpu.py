@@ -5,9 +5,13 @@ import pyloudnorm as pyln
 from pedalboard import Limiter, Pedalboard, Gain
 from typing import List, Tuple
 
+__all__ = ["RandomSwapLR", "RandomGain", "RandomFlipPhase", "LimitAug", "CPUBase"]
+
 
 class CPUBase(object):
-    def __call__(self, x: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __call__(
+        self, x: Tuple[torch.Tensor, torch.Tensor]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             x (Tuple[torch.Tensor, torch.Tensor]): (mixture, stems) where
@@ -47,8 +51,11 @@ class RandomGain(CPUBase):
         self.high = high
 
     def _transform(self, stems):
-        gains = torch.rand(
-            stems.shape[0], 1, 1, device=stems.device) * (self.high - self.low) + self.low
+        gains = (
+            torch.rand(stems.shape[0], 1, 1, device=stems.device)
+            * (self.high - self.low)
+            + self.low
+        )
         stems = stems * gains
         return stems
 
@@ -66,13 +73,15 @@ def db2linear(x):
 
 
 class LimitAug(CPUBase):
-    def __init__(self,
-                 target_lufs_mean=-10.887,
-                 target_lufs_std=1.191,
-                 target_loudnorm_lufs=-14.0,
-                 max_release_ms=200.0,
-                 min_release_ms=30.0,
-                 sample_rate=44100) -> None:
+    def __init__(
+        self,
+        target_lufs_mean=-10.887,
+        target_lufs_std=1.191,
+        target_loudnorm_lufs=-14.0,
+        max_release_ms=200.0,
+        min_release_ms=30.0,
+        sample_rate=44100,
+    ) -> None:
         """
         Args:
             target_lufs_mean (float): mean of target LUFS. default: -10.887 (corresponding to the statistics of musdb-L)
@@ -84,17 +93,19 @@ class LimitAug(CPUBase):
         """
         super().__init__()
         self.target_lufs_sampler = torch.distributions.Normal(
-            target_lufs_mean, target_lufs_std)
+            target_lufs_mean, target_lufs_std
+        )
         self.target_loudnorm_lufs = target_loudnorm_lufs
         self.sample_rate = sample_rate
-        self.board = Pedalboard(
-            [Gain(0), Limiter(threshold_db=0.0, release_ms=100.0)]
-        )
+        self.board = Pedalboard([Gain(0), Limiter(threshold_db=0.0, release_ms=100.0)])
         self.limiter_release_sampler = torch.distributions.Uniform(
-            min_release_ms, max_release_ms)
+            min_release_ms, max_release_ms
+        )
         self.meter = pyln.Meter(sample_rate)
 
-    def __call__(self, x: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __call__(
+        self, x: Tuple[torch.Tensor, torch.Tensor]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         mixture, stems = x
         mixture_np = mixture.numpy().T
         loudness = self.meter.integrated_loudness(mixture_np)

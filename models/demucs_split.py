@@ -27,19 +27,21 @@ def rescale_conv(reference):
             m.weight.div_(scale)
             if m.bias is not None:
                 m.bias.div_(scale)
+
     return closure
 
 
 class DemucsSplit(nn.Module):
-    def __init__(self,
-                 channels=64,
-                 depth=6,
-                 rescale=0.1,
-                 resample=True,
-                 kernel_size=8,
-                 stride=4,
-                 lstm_layers=2):
-
+    def __init__(
+        self,
+        channels=64,
+        depth=6,
+        rescale=0.1,
+        resample=True,
+        kernel_size=8,
+        stride=4,
+        lstm_layers=2,
+    ):
         super().__init__()
         self.kernel_size = kernel_size
         self.stride = stride
@@ -59,12 +61,10 @@ class DemucsSplit(nn.Module):
         for index in range(depth):
             self.encoder.append(
                 nn.Sequential(
-                    nn.Conv1d(
-                        in_channels, channels, kernel_size, stride
-                    ),
+                    nn.Conv1d(in_channels, channels, kernel_size, stride),
                     nn.ReLU(inplace=True),
                     nn.Conv1d(channels, channels * 2, 1),
-                    nn.GLU(dim=1)
+                    nn.GLU(dim=1),
                 )
             )
 
@@ -74,13 +74,16 @@ class DemucsSplit(nn.Module):
             else:
                 out_channels = 8
 
-            self.convs_1x1.insert(0,
-                                  nn.Conv1d(channels, channels * 4, 3, padding=1, bias=False))
-            self.dec_pre_convs.insert(0,
-                                      nn.Conv1d(channels * 2, channels * 4, 3, padding=1, groups=4))
+            self.convs_1x1.insert(
+                0, nn.Conv1d(channels, channels * 4, 3, padding=1, bias=False)
+            )
+            self.dec_pre_convs.insert(
+                0, nn.Conv1d(channels * 2, channels * 4, 3, padding=1, groups=4)
+            )
             decode = [
-                nn.ConvTranspose1d(channels * 2, out_channels,
-                                   kernel_size, stride, groups=4)
+                nn.ConvTranspose1d(
+                    channels * 2, out_channels, kernel_size, stride, groups=4
+                )
             ]
             if index > 0:
                 decode.append(nn.ReLU(inplace=True))
@@ -95,7 +98,8 @@ class DemucsSplit(nn.Module):
             hidden_size=channels,
             num_layers=lstm_layers,
             dropout=0,
-            bidirectional=True)
+            bidirectional=True,
+        )
         self.lstm_linear = nn.Linear(channels * 2, channels * 2)
 
         self.apply(rescale_conv(reference=rescale))
@@ -108,7 +112,7 @@ class DemucsSplit(nn.Module):
         std = mono.std(dim=-1, keepdim=True).add_(1e-5)
         x = standardize(x, mu, std)
 
-        if hasattr(self, 'up_sample'):
+        if hasattr(self, "up_sample"):
             x = self.up_sample(x)
 
         saved = []
@@ -120,15 +124,17 @@ class DemucsSplit(nn.Module):
         x = self.lstm(x)[0]
         x = self.lstm_linear(x).permute(1, 2, 0)
 
-        for decode, pre_dec, conv1x1 in zip(self.decoder, self.dec_pre_convs, self.convs_1x1):
+        for decode, pre_dec, conv1x1 in zip(
+            self.decoder, self.dec_pre_convs, self.convs_1x1
+        ):
             skip = saved.pop()
 
-            x = pre_dec(x) + conv1x1(skip[..., :x.shape[2]])
+            x = pre_dec(x) + conv1x1(skip[..., : x.shape[2]])
             a, b = x.view(x.shape[0], 4, -1, x.shape[2]).chunk(2, 2)
             x = glu(a, b)
             x = decode(x.view(x.shape[0], -1, x.shape[3]))
 
-        if hasattr(self, 'down_sample'):
+        if hasattr(self, "down_sample"):
             x = self.down_sample(x)
 
         x = destandardize(x, mu, std)
