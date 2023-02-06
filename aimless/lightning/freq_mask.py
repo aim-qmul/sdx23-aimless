@@ -4,11 +4,11 @@ from torch import nn
 from typing import List, Dict
 from torchaudio.transforms import Spectrogram, InverseSpectrogram
 
-from loss.time import SDR
-from loss.freq import FLoss
-from augment.cuda import CudaBase
+from ..loss.time import SDR
+from ..loss.freq import FLoss
+from ..augment.cuda import CudaBase
 
-from utils import MWF, MDX_SOURCES, SDX_SOURCES
+from ..utils import MWF, MDX_SOURCES, SDX_SOURCES
 
 
 class MaskPredictor(pl.LightningModule):
