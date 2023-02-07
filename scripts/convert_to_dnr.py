@@ -568,7 +568,7 @@ def main():
         default=1000,
         help="Total number of output files before splitting",
     )
-    parser.add_argument("-sr", type=int, help="Sample rate")
+    parser.add_argument("-sr", type=int, help="Sample rate", default=44100)
     parser.add_argument("-o", "--output_dir", type=str, required=False)
 
     args = parser.parse_args()
