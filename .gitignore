@@ -1,2 +1,5 @@
 lightning_logs/*
 *.pyc
+build/
+dist/
+*.egg-info
