@@ -42,10 +42,7 @@ def trim_relative_silence_from_audio(audio, sr, frame_duration=0.04, hop_duratio
 
 
 def lufs_norm(data, sr, norm=-6):
-    block_size = 0.4 if len(data) / sr >= 0.4 else len(data) / sr
-    # measure the loudness first
-    meter = pyln.Meter(rate=sr, block_size=block_size)
-    loudness = meter.integrated_loudness(data)
+    loudness = get_lufs(data, sr)
 
     assert not math.isinf(loudness)
 
