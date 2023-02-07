@@ -30,9 +30,7 @@ python main.py fit --config cfg/demucs.yaml
   * `loss`: loss functions.
     * `freq.*`: loss functions for frequency-domain models .
     * `time.*`: loss functions for time-domain models.
-  * `augment`: data augmentation.
-    * `cpu.*`: better to run on CPU.
-    * `cuda.*`: better to run on GPU.
+  * `augment`: data augmentations that are better on GPU.
   * `lightning`: all lightning modules.
     * `waveform.WaveformSeparator`: trainer for time-domain models.
     * `freq_mask.MaskPredictor`: trainer for frequency-domain models.
@@ -41,6 +39,7 @@ python main.py fit --config cfg/demucs.yaml
 * `data`: 
   * `dataset`: custom pytorch datasets.
   * `lightning`: all lightning data modules.
+  * `augment`: data augmentations that are better on CPU.
 
 ## Streamlit
 
