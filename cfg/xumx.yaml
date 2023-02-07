@@ -71,7 +71,7 @@ model:
         hop_length: 1024
         n_iter: 1
     transforms:
-    - class_path: aimless.augment.cuda.SpeedPerturb
+    - class_path: aimless.augment.SpeedPerturb
       init_args:
         orig_freq: 44100
         speeds: 
@@ -79,7 +79,7 @@ model:
         - 100
         - 110
         p: 0.2
-    - class_path: aimless.augment.cuda.RandomPitch
+    - class_path: aimless.augment.RandomPitch
       init_args:
         semitones:
         - -1
@@ -104,10 +104,10 @@ data:
     random: true
     random_track_mix: true
     transforms:
-    - class_path: aimless.augment.cpu.RandomGain
-    - class_path: aimless.augment.cpu.RandomFlipPhase
-    - class_path: aimless.augment.cpu.RandomSwapLR
-    - class_path: aimless.augment.cpu.LimitAug
+    - class_path: data.augment.RandomGain
+    - class_path: data.augment.RandomFlipPhase
+    - class_path: data.augment.RandomSwapLR
+    - class_path: data.augment.LimitAug
       init_args:
         sample_rate: 44100
     batch_size: 4

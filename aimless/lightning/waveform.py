@@ -4,7 +4,7 @@ from torch import nn
 from typing import List, Dict
 
 from ..loss.time import TLoss, SDR
-from ..augment.cuda import CudaBase
+from ..augment import CudaBase
 
 from ..utils import MDX_SOURCES, SDX_SOURCES
 

@@ -5,7 +5,7 @@ from typing import List
 
 
 from data.dataset import FastMUSDB
-from aimless.augment.cpu import CPUBase
+from data.augment import CPUBase
 
 
 class MUSDB(pl.LightningDataModule):

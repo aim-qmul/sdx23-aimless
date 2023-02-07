@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from typing import List
 
 from data.dataset import DnR as DnRDataset
-from aimless.augment.cpu import CPUBase
+from data.augment import CPUBase
 
 
 class DnR(pl.LightningDataModule):
