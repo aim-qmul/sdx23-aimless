@@ -33,13 +33,11 @@ def apply_fadeout(audio, sr, duration=3.0):
 
 
 def create_dir(dir, subdirs=None):
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    os.makedirs(dir, exist_ok=True)
 
     if subdirs:
         for s in subdirs:
-            if not os.path.exists(os.path.join(dir, s)):
-                os.makedirs(os.path.join(dir, s))
+            os.makedirs(os.path.join(dir, s), exist_ok=True)
 
     return dir
 
