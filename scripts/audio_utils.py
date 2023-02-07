@@ -82,7 +82,7 @@ def db_to_gain(db):
 
 
 def gain_from_combined_db_levels(dbs):
-    return np.prod([10 ** (db / 20.0) for db in dbs])
+    return db_to_gain(sum(dbs))
 
 
 def validate_audio(d):
