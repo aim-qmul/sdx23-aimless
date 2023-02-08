@@ -229,7 +229,5 @@ if __name__ == "__main__":
 
     # load audio
     uploaded_file = st.file_uploader("Choose a file to demix.")
-
     if uploaded_file is not None:
-        # split with model
         process_file(uploaded_file, model, device, sample_rate)
