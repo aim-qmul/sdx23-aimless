@@ -66,8 +66,9 @@ class RandomSwapLR(CPUBase):
 
 
 class RandomGain(CPUBase):
-    def __init__(self, low=0.25, high=1.25) -> None:
+    def __init__(self, p=1.0, low=0.25, high=1.25) -> None:
         super().__init__()
+        self.p = p
         self.low = low
         self.high = high
 
