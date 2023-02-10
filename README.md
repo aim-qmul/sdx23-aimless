@@ -26,18 +26,20 @@ python main.py fit --config cfg/demucs.yaml
 
 ## Structure
 
-* `loss`: loss functions.
-  * `freq.*`: loss functions for frequency-domain models .
-  * `time.*`: loss functions for time-domain models.
-* `augment`: data augmentation.
-  * `cpu.*`: better to run on CPU.
-  * `cuda.*`: better to run on GPU.
-* `data`: any datasets.
-* `lightning`: all lightning modules.
-  * `waveform.WaveformSeparator`: trainer for time-domain models.
-  * `freq_mask.MaskPredictor`: trainer for frequency-domain models.
-* `models`: your custom models.
+* `aimless`: package root, which can be imported for submission.
+  * `loss`: loss functions.
+    * `freq.*`: loss functions for frequency-domain models .
+    * `time.*`: loss functions for time-domain models.
+  * `augment`: data augmentations that are better on GPU.
+  * `lightning`: all lightning modules.
+    * `waveform.WaveformSeparator`: trainer for time-domain models.
+    * `freq_mask.MaskPredictor`: trainer for frequency-domain models.
+  * `models`: your custom models.
 * `cfg`: all config files.
+* `data`: 
+  * `dataset`: custom pytorch datasets.
+  * `lightning`: all lightning data modules.
+  * `augment`: data augmentations that are better on CPU.
 
 ## Streamlit
 
@@ -46,3 +48,11 @@ Split song in the browser with pretrained Hybrid Demucs.
 ``` streamlit run scripts/webapp.py ```
 
 Then open [http://localhost:8501/](http://localhost:8501/) in your browser. 
+
+
+## Install the repository as a package
+
+```sh
+pip install git+https://yoyololicon:ACCESS_TOKEN@github.com/yoyololicon/mdx23-aim-playground
+```
+For the value of `ACCESS_TOKEN` please refer to [#24](https://github.com/yoyololicon/mdx23-aim-playground/issues/24#issuecomment-1420952853).

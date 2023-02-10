@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from itertools import combinations, chain
-from utils import MWF
+from ..utils import MWF
 from torchaudio.transforms import InverseSpectrogram
 
 

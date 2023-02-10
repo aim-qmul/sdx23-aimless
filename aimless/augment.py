@@ -1,8 +1,13 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
+import torchaudio
 from torchaudio.transforms import TimeStretch, Spectrogram, InverseSpectrogram, Resample
+from torchaudio import functional as aF
+from torch_fftconv import fft_conv1d
+from pathlib import Path
 
-__all__ = ["SpeedPerturb", "RandomPitch", "CudaBase"]
+__all__ = ["SpeedPerturb", "RandomPitch", "RandomConvolutions", "CudaBase"]
 
 
 class CudaBase(nn.Module):
@@ -12,6 +17,13 @@ class CudaBase(nn.Module):
         self.rand_size = rand_size
 
     def _transform(self, stems, index):
+        """
+        Args:
+            stems (torch.Tensor): (B, Num_channels, L)
+            index (int): index of random transform
+        Return:
+            perturbed_stems (torch.Tensor): (B, Num_channels, L')
+        """
         raise NotImplementedError
 
     def forward(self, stems: torch.Tensor):
@@ -102,3 +114,31 @@ class RandomPitch(CudaBase):
             stretched_stems.view(-1, stretched_stems.shape[-1])
         ).view(*stretched_stems.shape[:-1], -1)
         return shifted_stems
+
+
+class RandomConvolutions(CudaBase):
+    def __init__(self, target_sr: int, ir_folder: str, **kwargs):
+        ir_folder = Path(ir_folder)
+        ir_files = list(ir_folder.glob("**/*.wav"))
+        impulses = []
+        for ir_file in ir_files:
+            ir, sr = torchaudio.load(ir_file)
+            if ir.shape[0] > 2:
+                continue
+            if sr != target_sr:
+                ir = aF.resample(ir, sr, target_sr)
+            if ir.shape[0] == 1:
+                ir = ir.repeat(2, 1)
+            impulses.append(ir)
+
+        super().__init__(len(impulses), **kwargs)
+        for i, impulse in enumerate(impulses):
+            self.register_buffer(f"impulse_{i}", impulse)
+
+    def _transform(self, stems, index):
+        ir = self.get_buffer(f"impulse_{index}").unsqueeze(1)
+        ir_flipped = ir.flip(-1)
+        padded_stems = F.pad(stems, (ir.shape[-1] - 1, 0))
+        # TODO: dynamically use F.conv1d if impulse is short
+        convolved_stems = fft_conv1d(padded_stems, ir_flipped, groups=2)
+        return convolved_stems

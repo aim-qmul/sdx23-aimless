@@ -1,38 +1,36 @@
-import musdb
 from torch.utils.data import Dataset
 import torch
 import random
 import os
-import yaml
+from pathlib import Path
 import numpy as np
 import torchaudio
 from tqdm import tqdm
 from typing import Optional, Callable
 
-from utils import MDX_SOURCES as SOURCES
+from aimless.utils import SDX_SOURCES as SOURCES
 
 
-__all__ = ["FastMUSDB", "source_idx"]
+__all__ = ["DnR", "source_idx"]
 
 
-class FastMUSDB(Dataset):
+class DnR(Dataset):
     sr: int = 44100
 
     def __init__(
         self,
-        root=None,
-        subsets=["train", "test"],
-        split=None,
-        seq_duration=6.0,
-        samples_per_track=64,
-        random=False,
-        random_track_mix=False,
+        root: str,
+        split: str = "train",
+        seq_duration: float = 6.0,
+        samples_per_track: int = 64,
+        random: bool = False,
+        random_track_mix: bool = False,
         transform: Optional[Callable] = None,
     ):
         super().__init__()
-        self.root = os.path.expanduser(root)
+        root = Path(os.path.expanduser(root))
+        self.root = root
         self.seq_duration = seq_duration
-        self.subsets = subsets
         self.segment = int(self.seq_duration * self.sr)
         self.split = split
         self.samples_per_track = samples_per_track
@@ -41,13 +39,19 @@ class FastMUSDB(Dataset):
 
         self.transform = transform
 
-        setup_path = os.path.join(musdb.__path__[0], "configs", "mus.yaml")
-        with open(setup_path, "r") as f:
-            self.setup = yaml.safe_load(f)
+        if self.split == "train":
+            split_root = root / "tr"
+        elif self.split == "valid":
+            split_root = root / "cv"
+        elif self.split == "test":
+            split_root = root / "tt"
+        else:
+            raise ValueError("Invalid split: {}".format(self.split))
 
-        self.tracks, self.track_lenghts = self.load_mus_tracks(
-            self.sr, self.subsets, self.split
-        )
+        self.tracks = sorted([x for x in split_root.iterdir() if x.is_dir()])
+        self.track_lenghts = [
+            torchaudio.info(str(x / "mix.wav")).num_frames for x in tqdm(self.tracks)
+        ]
 
         if self.seq_duration <= 0:
             self._size = len(self.tracks)
@@ -58,46 +62,6 @@ class FastMUSDB(Dataset):
             cum_chunks = np.cumsum(chunks)
             self.cum_chunks = cum_chunks
             self._size = cum_chunks[-1]
-
-    def load_mus_tracks(self, sr, subsets=None, split=None):
-        if subsets is not None:
-            if isinstance(subsets, str):
-                subsets = [subsets]
-        else:
-            subsets = ["train", "test"]
-
-        if subsets != ["train"] and split is not None:
-            raise RuntimeError("Subset has to set to `train` when split is used")
-
-        print("Gathering files ...")
-        tracks = []
-        track_lengths = []
-        for subset in subsets:
-            subset_folder = os.path.join(self.root, subset)
-            for _, folders, _ in tqdm(os.walk(subset_folder)):
-                # parse pcm tracks and sort by name
-                for track_name in sorted(folders):
-                    if subset == "train":
-                        if (
-                            split == "train"
-                            and track_name in self.setup["validation_tracks"]
-                        ):
-                            continue
-                        elif (
-                            split == "valid"
-                            and track_name not in self.setup["validation_tracks"]
-                        ):
-                            continue
-
-                    track_folder = os.path.join(subset_folder, track_name)
-                    # add track to list of tracks
-                    tracks.append(track_folder)
-                    meta = torchaudio.info(os.path.join(track_folder, "mixture.wav"))
-                    assert meta.sample_rate == sr
-
-                    track_lengths.append(meta.num_frames)
-
-        return tracks, track_lengths
 
     def __len__(self):
         return self._size
@@ -121,10 +85,10 @@ class FastMUSDB(Dataset):
         if self.seq_duration <= 0:
             folder_name = self.tracks[index]
             x = torchaudio.load(
-                os.path.join(folder_name, "mixture.wav"),
+                folder_name / "mix.wav",
             )[0]
             for s in SOURCES:
-                source_name = os.path.join(folder_name, s + ".wav")
+                source_name = folder_name / (s + ".wav")
                 audio = torchaudio.load(source_name)[0]
                 stems.append(audio)
         else:
@@ -141,7 +105,7 @@ class FastMUSDB(Dataset):
                     folder_name, chunk_start = self.tracks[
                         track_idx
                     ], self._get_random_start(self.track_lenghts[track_idx])
-                source_name = os.path.join(folder_name, s + ".wav")
+                source_name = folder_name / (s + ".wav")
                 audio = torchaudio.load(
                     source_name,
                     num_frames=self.segment,
@@ -152,14 +116,12 @@ class FastMUSDB(Dataset):
                 x = sum(stems)
             else:
                 x = torchaudio.load(
-                    os.path.join(folder_name, "mixture.wav"),
+                    folder_name / "mix.wav",
                     num_frames=self.segment,
                     frame_offset=chunk_start,
                 )[0]
 
         y = torch.stack(stems)
-
         if self.transform is not None:
             x, y = self.transform((x, y))
-
         return x, y

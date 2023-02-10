@@ -19,5 +19,6 @@ dependencies:
     - pedalboard
     - audio-data-pytorch
     - pyloudnorm
+    - torch_fftconv
     - streamlit 
     - librosa

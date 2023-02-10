@@ -3,8 +3,8 @@ from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary
 from pytorch_lightning.strategies import DDPStrategy
 
-from lightning.waveform import WaveformSeparator
-from lightning.freq_mask import MaskPredictor
+from aimless.lightning.waveform import WaveformSeparator
+from aimless.lightning.freq_mask import MaskPredictor
 
 
 def cli_main():
