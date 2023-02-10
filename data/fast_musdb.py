@@ -28,7 +28,6 @@ class FastMUSDB(Dataset):
         random=False,
         random_track_mix=False,
         transform: Optional[Callable] = None,
-        effects: torch.nn.Module = None,
     ):
         super().__init__()
         self.root = os.path.expanduser(root)
@@ -41,7 +40,6 @@ class FastMUSDB(Dataset):
         self.random = random
 
         self.transform = transform
-        self.effects = effects
 
         setup_path = os.path.join(musdb.__path__[0], "configs", "mus.yaml")
         with open(setup_path, "r") as f:
@@ -158,14 +156,6 @@ class FastMUSDB(Dataset):
                     num_frames=self.segment,
                     frame_offset=chunk_start,
                 )[0]
-
-        # apply audio effects
-        if self.effects is not None:
-            stems_fx = []
-            for stem in stems:
-                stems_fx.append(self.effects(stem))
-            stems = stems_fx
-            x = torch.stack(stems).sum(dim=0)
 
         y = torch.stack(stems)
 

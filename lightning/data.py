@@ -18,7 +18,6 @@ class MUSDB(pl.LightningDataModule):
         samples_per_track: int = 64,
         random: bool = False,
         random_track_mix: bool = False,
-        effects: torch.nn.Module = None,
         transforms: List[CPUBase] = None,
         batch_size: int = 16,
     ):
@@ -37,11 +36,6 @@ class MUSDB(pl.LightningDataModule):
         else:
             self.transforms = Compose(transforms)
 
-        if effects is None:
-            self.effects = None
-        else:
-            self.effects = effects
-
     def setup(self, stage=None):
         if stage == "fit":
             self.train_dataset = FastMUSDB(
@@ -52,7 +46,6 @@ class MUSDB(pl.LightningDataModule):
                 random=self.hparams.random,
                 random_track_mix=self.hparams.random_track_mix,
                 transform=self.transforms,
-                effects=self.effects,
             )
 
         if stage == "validate" or stage == "fit":
