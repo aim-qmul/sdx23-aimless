@@ -1,4 +1,3 @@
-import torch
 from torchvision.transforms import Compose
 from torch.utils.data import DataLoader, ConcatDataset
 import pytorch_lightning as pl
