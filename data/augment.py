@@ -310,7 +310,7 @@ def parametric_eq(
 class RandomParametricEQ(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         num_bands: int = 3,
         min_gain_db: float = -6.0,
         max_gain_db: float = +6.0,
@@ -396,7 +396,7 @@ def stereo_widener(x: torch.Tensor, width: torch.Tensor):
 class RandomStereoWidener(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         min_width: float = 0.0,
         max_width: float = 1.0,
         **kwargs,
@@ -414,7 +414,7 @@ class RandomStereoWidener(CPUBase):
 class RandomVolumeAutomation(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         min_segment_seconds: float = 3.0,
         min_gain_db: float = -6.0,
         max_gain_db: float = 6.0,
@@ -459,7 +459,7 @@ class RandomVolumeAutomation(CPUBase):
 class RandomPedalboardCompressor(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         min_threshold_db: float = -42.0,
         max_threshold_db: float = -6.0,
         min_ratio: float = 1.5,
@@ -504,7 +504,7 @@ class RandomPedalboardCompressor(CPUBase):
 class RandomPedalboardDelay(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         min_delay_seconds: float = 0.1,
         max_delay_sconds: float = 1.0,
         min_feedback: float = 0.05,
@@ -534,7 +534,7 @@ class RandomPedalboardDelay(CPUBase):
 class RandomPedalboardChorus(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         min_rate_hz: float = 0.25,
         max_rate_hz: float = 4.0,
         min_depth: float = 0.0,
@@ -583,7 +583,7 @@ class RandomPedalboardChorus(CPUBase):
 class RandomPedalboardPhaser(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         min_rate_hz: float = 0.25,
         max_rate_hz: float = 5.0,
         min_depth: float = 0.1,
@@ -634,7 +634,7 @@ class RandomPedalboardPhaser(CPUBase):
 class RandomPedalboardLimiter(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         p: float = 0.05,
         min_threshold_db: float = -32.0,
         max_threshold_db: float = -6.0,
@@ -665,7 +665,7 @@ class RandomPedalboardLimiter(CPUBase):
 class RandomPedalboardDistortion(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         p: float = 0.01,
         min_drive_db: float = -20.0,
         max_drive_db: float = 12.0,
@@ -686,7 +686,7 @@ class RandomPedalboardDistortion(CPUBase):
 class RandomSoxReverb(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         min_reverberance: float = 10.0,
         max_reverberance: float = 100.0,
         min_high_freq_damping: float = 0.0,
@@ -746,7 +746,7 @@ class RandomSoxReverb(CPUBase):
 class RandomPedalboardReverb(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         min_room_size: float = 0.0,
         max_room_size: float = 1.0,
         min_damping: float = 0.0,
@@ -791,7 +791,7 @@ class RandomPedalboardReverb(CPUBase):
 class LoudnessNormalize(CPUBase):
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: float = 44100.0,
         target_lufs_db: float = -32.0,
         **kwargs,
     ) -> None:
