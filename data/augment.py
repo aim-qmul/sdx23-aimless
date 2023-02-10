@@ -635,7 +635,6 @@ class RandomPedalboardLimiter(CPUBase):
     def __init__(
         self,
         sample_rate: float = 44100.0,
-        p: float = 0.05,
         min_threshold_db: float = -32.0,
         max_threshold_db: float = -6.0,
         min_release_ms: float = 10.0,
@@ -666,7 +665,6 @@ class RandomPedalboardDistortion(CPUBase):
     def __init__(
         self,
         sample_rate: float = 44100.0,
-        p: float = 0.01,
         min_drive_db: float = -20.0,
         max_drive_db: float = 12.0,
         **kwargs,
