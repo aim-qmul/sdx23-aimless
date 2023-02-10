@@ -239,9 +239,6 @@ class DPT(nn.Module):
 
         self.mask_activation = _get_activation(mask_nonlinearity)
 
-    def _global_norm(self, x: torch.Tensor):
-        return x / x.norm(dim=1, keepdim=True)
-
     def _segment(self, x: torch.Tensor):
         x = rearrange(x, "b c t -> b c t ()")
         x_segmented = nn.functional.unfold(
