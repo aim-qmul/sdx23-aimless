@@ -93,14 +93,7 @@ data:
     seq_duration: 10.0
     samples_per_track: 500
     transforms:
-<<<<<<< HEAD
     - class_path: augment.cpu.RandomParametricEQ
-=======
-    - class_path: data.augment.RandomGain
-    - class_path: data.augment.RandomFlipPhase
-    - class_path: data.augment.RandomSwapLR
-    - class_path: data.augment.LimitAug
->>>>>>> 6e3993b2cd5dded2986b13c47bdc712e5c47e490
       init_args:
         sample_rate: 44100
         p: 0.7
