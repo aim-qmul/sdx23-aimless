@@ -6,7 +6,6 @@ import scipy.stats
 import scipy.signal
 import pyloudnorm as pyln
 from typing import List, Tuple
-from torchvision.transforms import Compose, RandomApply
 
 from pedalboard import (
     Pedalboard,
@@ -21,7 +20,25 @@ from pedalboard import (
 )
 
 
-__all__ = ["RandomSwapLR", "RandomGain", "RandomFlipPhase", "LimitAug", "CPUBase"]
+__all__ = [
+    "RandomSwapLR",
+    "RandomGain",
+    "RandomFlipPhase",
+    "LimitAug",
+    "CPUBase",
+    "RandomParametricEQ",
+    "RandomStereoWidener",
+    "RandomVolumeAutomation",
+    "RandomPedalboardCompressor",
+    "RandomPedalboardDelay",
+    "RandomPedalboardChorus",
+    "RandomPedalboardDistortion",
+    "RandomPedalboardPhaser",
+    "RandomPedalboardReverb",
+    "RandomPedalboardLimiter",
+    "RandomSoxReverb",
+    "LoudnessNormalize",
+]
 
 
 class CPUBase(object):
