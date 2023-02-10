@@ -413,7 +413,7 @@ class RandomVolumeAutomation(CPUBase):
         gain_db = torch.zeros(x.shape[-1]).type_as(x)
 
         seconds = x.shape[-1] / self.sample_rate
-        max_num_segments = int(seconds // self.min_segment_seconds)
+        max_num_segments = max(1, int(seconds // self.min_segment_seconds))
 
         num_segments = randint(1, max_num_segments)
         segment_lengths = (
@@ -729,7 +729,7 @@ class RandomSoxReverb(CPUBase):
         return (x * (1 - wet_dry)) + (y * wet_dry)
 
 
-class RandomPebalboardReverb(CPUBase):
+class RandomPedalboardReverb(CPUBase):
     def __init__(
         self,
         sample_rate: float,
@@ -779,7 +779,7 @@ class LoudnessNormalize(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.5,
+        p: float = 1.0,
         target_lufs_db: float = -32.0,
     ) -> None:
         super().__init__()
@@ -793,70 +793,3 @@ class LoudnessNormalize(CPUBase):
         delta_lufs_db = torch.tensor([self.target_lufs_db - x_lufs_db]).float()
         gain_lin = 10.0 ** (delta_lufs_db.clamp(-120, 40.0) / 20.0)
         return gain_lin * x
-
-
-class RandomAudioEffectsChannel(torch.nn.Module):
-    def __init__(
-        self,
-        sample_rate: float,
-        parametric_eq_prob: float = 0.7,
-        distortion_prob: float = 0.01,
-        delay_prob: float = 0.1,
-        chorus_prob: float = 0.01,
-        phaser_prob: float = 0.01,
-        compressor_prob: float = 0.4,
-        reverb_prob: float = 0.2,
-        stereo_widener_prob: float = 0.3,
-        limiter_prob: float = 0.3,
-        vol_automation_prob: float = 0.0,
-        target_lufs_db: float = -32.0,
-    ) -> None:
-        super().__init__()
-        self.transforms = Compose(
-            [
-                RandomApply(
-                    [RandomParametricEQ(sample_rate)],
-                    p=parametric_eq_prob,
-                ),
-                RandomApply(
-                    [RandomPedalboardDistortion(sample_rate)],
-                    p=distortion_prob,
-                ),
-                RandomApply(
-                    [RandomPedalboardDelay(sample_rate)],
-                    p=delay_prob,
-                ),
-                RandomApply(
-                    [RandomPedalboardChorus(sample_rate)],
-                    p=chorus_prob,
-                ),
-                RandomApply(
-                    [RandomPedalboardPhaser(sample_rate)],
-                    p=phaser_prob,
-                ),
-                RandomApply(
-                    [RandomPedalboardCompressor(sample_rate)],
-                    p=compressor_prob,
-                ),
-                RandomApply(
-                    [RandomPebalboardReverb(sample_rate)],
-                    p=reverb_prob,
-                ),
-                RandomApply(
-                    [RandomStereoWidener(sample_rate)],
-                    p=stereo_widener_prob,
-                ),
-                RandomApply(
-                    [RandomPedalboardLimiter(sample_rate)],
-                    p=limiter_prob,
-                ),
-                RandomApply(
-                    [RandomVolumeAutomation(sample_rate)],
-                    p=vol_automation_prob,
-                ),
-                LoudnessNormalize(sample_rate, target_lufs_db=target_lufs_db),
-            ]
-        )
-
-    def forward(self, x: torch.Tensor):
-        return self.transforms(x)
