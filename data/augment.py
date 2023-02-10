@@ -150,6 +150,8 @@ class LimitAug(CPUBase):
     def __call__(
         self, x: Tuple[torch.Tensor, torch.Tensor]
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        if np.random.rand() > self.p:
+            return x
         mixture, stems = x
         mixture_np = mixture.numpy().T
         loudness = self.meter.integrated_loudness(mixture_np)
