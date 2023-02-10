@@ -25,6 +25,10 @@ __all__ = ["RandomSwapLR", "RandomGain", "RandomFlipPhase", "LimitAug", "CPUBase
 
 
 class CPUBase(object):
+    def __init__(self, p: float = 1.0):
+        assert 0 <= p <= 1, "invalid probability value"
+        self.p = p
+
     def __call__(
         self, x: Tuple[torch.Tensor, torch.Tensor]
     ) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -39,12 +43,15 @@ class CPUBase(object):
                 stems: (Num_sources, Num_channels, L)
         """
         mixture, stems = x
-        if np.random.rand() < self.p:
-            stems_fx = []
-            for stem_idx in np.arange(stems.shape[0]):
-                stems_fx.append(self._transform(stems[stem_idx, ...]))
-            stems = torch.stack(stems_fx, dim=0)
-            mixture = stems.sum(0)
+        stems_fx = []
+        for stem_idx in np.arange(stems.shape[0]):
+            stem = stems[stem_idx, ...]
+            if np.random.rand() < self.p:
+                stems_fx.append(self._transform(stem))
+            else:
+                stems_fx.append(stem)
+        stems = torch.stack(stems_fx, dim=0)
+        mixture = stems.sum(0)
         return (mixture, stems)
 
     def _transform(self, stems: torch.Tensor) -> torch.Tensor:
@@ -52,10 +59,8 @@ class CPUBase(object):
 
 
 class RandomSwapLR(CPUBase):
-    def __init__(self, p=0.5) -> None:
-        super().__init__()
-        assert 0 <= p <= 1, "invalid probability value"
-        self.p = p
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
 
     def _transform(self, stems: torch.Tensor):
         tmp = torch.flip(stems, [1])
@@ -66,9 +71,8 @@ class RandomSwapLR(CPUBase):
 
 
 class RandomGain(CPUBase):
-    def __init__(self, p=1.0, low=0.25, high=1.25) -> None:
-        super().__init__()
-        self.p = p
+    def __init__(self, low=0.25, high=1.25, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.low = low
         self.high = high
 
@@ -97,13 +101,13 @@ def db2linear(x):
 class LimitAug(CPUBase):
     def __init__(
         self,
-        p: float = 1.0,
         target_lufs_mean=-10.887,
         target_lufs_std=1.191,
         target_loudnorm_lufs=-14.0,
         max_release_ms=200.0,
         min_release_ms=30.0,
         sample_rate=44100,
+        **kwargs,
     ) -> None:
         """
         Args:
@@ -114,8 +118,7 @@ class LimitAug(CPUBase):
             min_release_ms (float): min release time of limiter. default: 30.0
             sample_rate (int): sample rate of audio. default: 44100
         """
-        super().__init__()
-        self.p = p
+        super().__init__(**kwargs)
         self.target_lufs_sampler = torch.distributions.Normal(
             target_lufs_mean, target_lufs_std
         )
@@ -291,7 +294,6 @@ class RandomParametricEQ(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.7,
         num_bands: int = 3,
         min_gain_db: float = -6.0,
         max_gain_db: float = +6.0,
@@ -299,10 +301,10 @@ class RandomParametricEQ(CPUBase):
         max_cutoff_freq: float = 10000.0,
         min_q_factor: float = 0.1,
         max_q_factor: float = 4.0,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.num_bands = num_bands
         self.min_gain_db = min_gain_db
         self.max_gain_db = max_gain_db
@@ -378,13 +380,12 @@ class RandomStereoWidener(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.4,
         min_width: float = 0.0,
         max_width: float = 1.0,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_width = min_width
         self.max_width = max_width
 
@@ -397,14 +398,13 @@ class RandomVolumeAutomation(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.5,
         min_segment_seconds: float = 3.0,
         min_gain_db: float = -6.0,
         max_gain_db: float = 6.0,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_segment_seconds = min_segment_seconds
         self.min_gain_db = min_gain_db
         self.max_gain_db = max_gain_db
@@ -443,7 +443,6 @@ class RandomPedalboardCompressor(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.5,
         min_threshold_db: float = -42.0,
         max_threshold_db: float = -6.0,
         min_ratio: float = 1.5,
@@ -452,10 +451,10 @@ class RandomPedalboardCompressor(CPUBase):
         max_attack_ms: float = 50.0,
         min_release_ms: float = 10.0,
         max_release_ms: float = 250.0,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_threshold_db = min_threshold_db
         self.max_threshold_db = max_threshold_db
         self.min_ratio = min_ratio
@@ -489,17 +488,16 @@ class RandomPedalboardDelay(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.1,
         min_delay_seconds: float = 0.1,
         max_delay_sconds: float = 1.0,
         min_feedback: float = 0.05,
         max_feedback: float = 0.6,
         min_mix: float = 0.0,
         max_mix: float = 0.7,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_delay_seconds = min_delay_seconds
         self.max_delay_seconds = max_delay_sconds
         self.min_feedback = min_feedback
@@ -520,7 +518,6 @@ class RandomPedalboardChorus(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.02,
         min_rate_hz: float = 0.25,
         max_rate_hz: float = 4.0,
         min_depth: float = 0.0,
@@ -531,10 +528,10 @@ class RandomPedalboardChorus(CPUBase):
         max_feedback: float = 0.6,
         min_mix: float = 0.1,
         max_mix: float = 0.7,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_rate_hz = min_rate_hz
         self.max_rate_hz = max_rate_hz
         self.min_depth = min_depth
@@ -570,7 +567,6 @@ class RandomPedalboardPhaser(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.02,
         min_rate_hz: float = 0.25,
         max_rate_hz: float = 5.0,
         min_depth: float = 0.1,
@@ -581,10 +577,10 @@ class RandomPedalboardPhaser(CPUBase):
         max_feedback: float = 0.6,
         min_mix: float = 0.1,
         max_mix: float = 0.7,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_rate_hz = min_rate_hz
         self.max_rate_hz = max_rate_hz
         self.min_depth = min_depth
@@ -627,10 +623,10 @@ class RandomPedalboardLimiter(CPUBase):
         max_threshold_db: float = -6.0,
         min_release_ms: float = 10.0,
         max_release_ms: float = 300.0,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_threshold_db = min_threshold_db
         self.max_threshold_db = max_threshold_db
         self.min_release_ms = min_release_ms
@@ -656,10 +652,10 @@ class RandomPedalboardDistortion(CPUBase):
         p: float = 0.01,
         min_drive_db: float = -20.0,
         max_drive_db: float = 12.0,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_drive_db = min_drive_db
         self.max_drive_db = max_drive_db
 
@@ -686,8 +682,9 @@ class RandomSoxReverb(CPUBase):
         max_stereo_depth: float = 100.0,
         min_pre_delay: float = 0.0,
         max_pre_delay: float = 100.0,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
         self.min_reverberance = min_reverberance
         self.max_reverberance = max_reverberance
@@ -733,7 +730,6 @@ class RandomPedalboardReverb(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 0.2,
         min_room_size: float = 0.0,
         max_room_size: float = 1.0,
         min_damping: float = 0.0,
@@ -742,10 +738,10 @@ class RandomPedalboardReverb(CPUBase):
         max_wet_dry: float = 0.7,
         min_width: float = 0.0,
         max_width: float = 1.0,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.min_room_size = min_room_size
         self.max_room_size = max_room_size
         self.min_damping = min_damping
@@ -779,12 +775,11 @@ class LoudnessNormalize(CPUBase):
     def __init__(
         self,
         sample_rate: float,
-        p: float = 1.0,
         target_lufs_db: float = -32.0,
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
-        self.p = p
         self.meter = pyln.Meter(sample_rate)
         self.target_lufs_db = target_lufs_db
 
