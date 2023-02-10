@@ -93,47 +93,47 @@ data:
     seq_duration: 10.0
     samples_per_track: 500
     transforms:
-    - class_path: augment.cpu.RandomParametricEQ
+    - class_path: data.augment.RandomParametricEQ
       init_args:
         sample_rate: 44100
         p: 0.7
-    - class_path: augment.cpu.RandomPedalboardDistortion
+    - class_path: data.augment.RandomPedalboardDistortion
       init_args:
         sample_rate: 44100
         p: 0.01
-    - class_path: augment.cpu.RandomPedalboardDelay
+    - class_path: data.augment.RandomPedalboardDelay
       init_args:
         sample_rate: 44100
         p: 0.02
-    - class_path: augment.cpu.RandomPedalboardChorus
+    - class_path: data.augment.RandomPedalboardChorus
       init_args:
         sample_rate: 44100
         p: 0.01
-    - class_path: augment.cpu.RandomPedalboardPhaser
+    - class_path: data.augment.RandomPedalboardPhaser
       init_args:
         sample_rate: 44100
         p: 0.01
-    - class_path: augment.cpu.RandomPedalboardCompressor
+    - class_path: data.augment.RandomPedalboardCompressor
       init_args:
         sample_rate: 44100
         p: 0.5
-    - class_path: augment.cpu.RandomPebalboardReverb
+    - class_path: data.augment.RandomPedalboardReverb
       init_args:
         sample_rate: 44100
         p: 0.2
-    - class_path: augment.cpu.RandomStereoWidener
+    - class_path: data.augment.RandomStereoWidener
       init_args:
         sample_rate: 44100
         p: 0.3
-    - class_path: augment.cpu.RandomPedalboardLimiter
+    - class_path: data.augment.RandomPedalboardLimiter
       init_args:
         sample_rate: 44100
         p: 0.1
-    - class_path: augment.cpu.RandomVolumeAutomation
+    - class_path: data.augment.RandomVolumeAutomation
       init_args:
         sample_rate: 44100
         p: 0.1
-    - class_path: augment.cpu.LoudnessNormalize
+    - class_path: data.augment.LoudnessNormalize
       init_args:
         sample_rate: 44100
         target_lufs_db: -32.0
