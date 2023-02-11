@@ -101,10 +101,7 @@ class RandomGain(CPUBase):
 
 class RandomFlipPhase(RandomSwapLR):
     def _transform(self, stems: torch.Tensor):
-        for i in range(stems.shape[0]):
-            if random.random() < self.p:
-                stems[i] *= -1
-        return stems
+        return -stems
 
 
 def db2linear(x):
