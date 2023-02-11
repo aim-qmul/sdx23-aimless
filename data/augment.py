@@ -90,13 +90,8 @@ class RandomGain(CPUBase):
         self.high = high
 
     def _transform(self, stems):
-        gains = (
-            torch.rand(stems.shape[0], 1, 1, device=stems.device)
-            * (self.high - self.low)
-            + self.low
-        )
-        stems = stems * gains
-        return stems
+        gain = np.random.rand() * (self.high - self.low) + self.low
+        return stems * gain
 
 
 class RandomFlipPhase(RandomSwapLR):
