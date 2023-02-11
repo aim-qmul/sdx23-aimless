@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from torchaudio.pipelines import HDEMUCS_HIGH_MUSDB_PLUS
 from torchaudio.transforms import Fade
 
-
 st.set_page_config(page_title="aimless-splitter")
 st.image("docs/aimless-logo-crop.png", use_column_width="always")
 
@@ -118,6 +117,13 @@ def process_file(file, model: torch.nn.Module, device: torch.device):
     plot_spectrogram(x_numpy, sample_rate=sample_rate)
     st.audio(x_numpy, sample_rate=sample_rate)
 
+    # If mono, make stereo
+    if x.shape[0] == 1:
+        x = x.repeat(2, 1)
+    # Otherwise just take first 2 channnels
+    elif x.shape[0] > 2:
+        x = x[:2]
+
     waveform = x.to(device)
 
     # split into 10.0 sec chunks
@@ -150,4 +156,5 @@ uploaded_file = st.file_uploader("Choose a file to demix.")
 
 if uploaded_file is not None:
     # split with hdemucs
-    hdemucs_sources = process_file(uploaded_file, hdemucs, "cuda:0")
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    hdemucs_sources = process_file(uploaded_file, hdemucs, device)
