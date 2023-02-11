@@ -50,6 +50,15 @@ class SDR(torch.nn.Module):
         return 10 * (num - den)
 
 
+class NegativeSDR(TLoss):
+    def __init__(self) -> None:
+        super().__init__()
+        self.sdr = SDR()
+
+    def _core_loss(self, pred, gt, mix):
+        return -self.sdr(pred, gt).mean(), {}
+
+
 class CL1Loss(TLoss):
     def _core_loss(self, pred, gt, mix):
         gt = gt[..., : pred.shape[-1]]
