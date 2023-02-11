@@ -45,8 +45,8 @@ class SDR(torch.nn.Module):
             + self._batch_dot(estimates, estimates)
             - 2 * self._batch_dot(estimates, references)
         )
-        den = den.relu().add_(delta).log10()
-        num = num.add_(delta).log10()
+        den = den.relu().add(delta).log10()
+        num = num.add(delta).log10()
         return 10 * (num - den)
 
 
