@@ -76,15 +76,11 @@ class CPUBase(object):
 
 
 class RandomSwapLR(CPUBase):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, p=0.5) -> None:
+        super().__init__(p=p)
 
     def _transform(self, stems: torch.Tensor):
-        tmp = torch.flip(stems, [1])
-        for i in range(stems.shape[0]):
-            if random.random() < self.p:
-                stems[i] = tmp[i]
-        return stems
+        return torch.flip(stems, [0])
 
 
 class RandomGain(CPUBase):
