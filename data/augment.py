@@ -100,6 +100,9 @@ class RandomGain(CPUBase):
 
 
 class RandomFlipPhase(RandomSwapLR):
+    def __init__(self, p=0.5) -> None:
+        super().__init__(p=p)
+
     def _transform(self, stems: torch.Tensor):
         return -stems
 
