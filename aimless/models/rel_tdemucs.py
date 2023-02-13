@@ -120,7 +120,6 @@ class RelTDemucs(nn.Module):
         attention_layers=8,
         **kwargs
     ):
-
         super().__init__()
         self.kernel_size = kernel_size
         self.stride = stride
@@ -169,7 +168,7 @@ class RelTDemucs(nn.Module):
         encoder_layer = RelEncoderLayer(
             d_model=channels, dim_feedforward=channels * 4, **kwargs
         )
-        self.encoder = nn.TransformerEncoder(encoder_layer, attention_layers)
+        self.transformer = nn.TransformerEncoder(encoder_layer, attention_layers)
         self.apply(rescale_conv(reference=rescale))
 
     def forward(self, x, context_size: int = None):
@@ -197,10 +196,11 @@ class RelTDemucs(nn.Module):
             mask = torch.triu(mask, diagonal=context_size)
             mask = mask | mask.T
 
-        x = self.encoder(x, mask).transpose(1, 2)
+        x = self.transformer(x, mask).transpose(1, 2)
 
-        for decode, skip in zip(self.decoder, saved):
-            x = decode(x + skip)
+        for decode in self.decoder:
+            skip = saved.pop()
+            x = decode(x + skip[..., :x.shape[-1]])
 
         if hasattr(self, "down_sample"):
             x = self.down_sample(x)
