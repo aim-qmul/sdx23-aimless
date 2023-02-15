@@ -39,6 +39,7 @@ __all__ = [
     "RandomSoxReverb",
     "LoudnessNormalize",
     "RandomPan",
+    "Mono2Stereo",
 ]
 
 
@@ -799,6 +800,15 @@ class LoudnessNormalize(CPUBase):
         return gain_lin * x
 
 
+class Mono2Stereo(CPUBase):
+    def __init__(self) -> None:
+        super().__init__(p=1.0)
+
+    def _transform(self, x: torch.Tensor):
+        assert x.ndim == 2 and x.shape[0] == 1, "x must be mono"
+        return torch.cat([x, x], dim=0)
+
+
 class RandomPan(CPUBase):
     def __init__(
         self,
@@ -812,10 +822,20 @@ class RandomPan(CPUBase):
 
     def _transform(self, x: torch.Tensor):
         """Constant power panning"""
-        assert x.ndim == 2 and x.shape[0] == 1, "x must be mono"
-        theta = rand(self.min_pan, self.max_pan) * np.pi / 4
-        sin_theta = np.sin(theta)
-        cos_theta = np.cos(theta)
-        right_gain = 0.707 * (cos_theta + sin_theta)
-        left_gain = 0.707 * (cos_theta - sin_theta)
-        return torch.cat([left_gain * x, right_gain * x], dim=0)
+        assert x.ndim == 2 and x.shape[0] == 2, "x must be stereo"
+        theta = rand(self.min_pan, self.max_pan) * np.pi / 2
+        x = x * 0.707  # normalize to prevent clipping
+        left_x, right_x = x[0], x[1]
+        if theta > 0:
+            # pan left channel only
+            right_gain = np.sin(theta)
+            left_gain = np.cos(theta)
+            left_x = left_gain * left_x
+            right_x = right_gain * left_x + right_x
+        else:
+            # pan right channel only
+            left_gain = np.sin(-theta)
+            right_gain = np.cos(-theta)
+            right_x = right_gain * right_x
+            left_x = left_gain * right_x + left_x
+        return torch.stack([left_x, right_x], dim=0)
