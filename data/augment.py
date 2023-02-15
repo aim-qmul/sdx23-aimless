@@ -38,6 +38,7 @@ __all__ = [
     "RandomPedalboardLimiter",
     "RandomSoxReverb",
     "LoudnessNormalize",
+    "RandomPan",
 ]
 
 
@@ -796,3 +797,25 @@ class LoudnessNormalize(CPUBase):
         delta_lufs_db = torch.tensor([self.target_lufs_db - x_lufs_db]).float()
         gain_lin = 10.0 ** (delta_lufs_db.clamp(-120, 40.0) / 20.0)
         return gain_lin * x
+
+
+class RandomPan(CPUBase):
+    def __init__(
+        self,
+        min_pan: float = -1.0,
+        max_pan: float = 1.0,
+        **kwargs,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.min_pan = min_pan
+        self.max_pan = max_pan
+
+    def _transform(self, x: torch.Tensor):
+        """Constant power panning"""
+        assert x.ndim == 2 and x.shape[0] == 1, "x must be mono"
+        theta = rand(self.min_pan, self.max_pan) * np.pi / 4
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+        right_gain = 0.707 * (cos_theta + sin_theta)
+        left_gain = 0.707 * (cos_theta - sin_theta)
+        return torch.cat([left_gain * x, right_gain * x], dim=0)
