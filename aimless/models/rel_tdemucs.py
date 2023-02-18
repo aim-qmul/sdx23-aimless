@@ -200,7 +200,7 @@ class RelTDemucs(nn.Module):
 
         for decode in self.decoder:
             skip = saved.pop()
-            x = decode(x + skip[..., :x.shape[-1]])
+            x = decode(x + skip[..., : x.shape[-1]])
 
         if hasattr(self, "down_sample"):
             x = self.down_sample(x)
