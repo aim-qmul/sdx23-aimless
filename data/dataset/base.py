@@ -20,7 +20,7 @@ class BaseDataset(Dataset):
         root: str,
         sources: List[str],
         mix_name: str = "mix",
-        split: str = "train",
+        split: str = None,
         seq_duration: float = 6.0,
         samples_per_track: int = 64,
         random: bool = False,
@@ -40,7 +40,7 @@ class BaseDataset(Dataset):
         self.mix_name = mix_name
         self.transform = transform
 
-        self.tracks, self.track_lenghts = self.load_tracks(self.split)
+        self.tracks, self.track_lenghts = self.load_tracks()
 
         if self.seq_duration <= 0:
             self._size = len(self.tracks)
@@ -52,7 +52,7 @@ class BaseDataset(Dataset):
             self.cum_chunks = cum_chunks
             self._size = cum_chunks[-1]
 
-    def load_tracks(self, split: str) -> Tuple[List[Path], List[int]]:
+    def load_tracks(self) -> Tuple[List[Path], List[int]]:
         # Implement in child class
         # Return list of tracks and list of track lengths
         raise NotImplementedError
