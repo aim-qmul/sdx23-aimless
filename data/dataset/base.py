@@ -9,7 +9,7 @@ from tqdm import tqdm
 from typing import Optional, Callable, List, Tuple
 
 
-__all__ = ["BaseDataset", "source_idx"]
+__all__ = ["BaseDataset"]
 
 
 class BaseDataset(Dataset):

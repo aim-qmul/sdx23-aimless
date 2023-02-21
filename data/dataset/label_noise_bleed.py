@@ -4,7 +4,7 @@ from data.dataset import BaseDataset
 
 from aimless.utils import MDX_SOURCES as SOURCES
 
-__all__ = ["DnR", "source_idx"]
+__all__ = ["DnR"]
 
 
 # Run scripts/dataset_split_and_mix.py first!

@@ -7,7 +7,7 @@ import yaml
 
 from aimless.utils import MDX_SOURCES as SOURCES
 
-__all__ = ["FastMUSDB", "source_idx"]
+__all__ = ["FastMUSDB"]
 
 
 class FastMUSDB(BaseDataset):

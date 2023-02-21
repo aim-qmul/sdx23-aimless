@@ -4,7 +4,7 @@ from data.dataset import BaseDataset
 
 from aimless.utils import SDX_SOURCES as SOURCES
 
-__all__ = ["DnR", "source_idx"]
+__all__ = ["DnR"]
 
 
 class DnR(BaseDataset):
