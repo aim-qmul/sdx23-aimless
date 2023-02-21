@@ -38,6 +38,8 @@ __all__ = [
     "RandomPedalboardLimiter",
     "RandomSoxReverb",
     "LoudnessNormalize",
+    "RandomPan",
+    "Mono2Stereo",
 ]
 
 
@@ -796,3 +798,36 @@ class LoudnessNormalize(CPUBase):
         delta_lufs_db = torch.tensor([self.target_lufs_db - x_lufs_db]).float()
         gain_lin = 10.0 ** (delta_lufs_db.clamp(-120, 40.0) / 20.0)
         return gain_lin * x
+
+
+class Mono2Stereo(CPUBase):
+    def __init__(self) -> None:
+        super().__init__(p=1.0)
+
+    def _transform(self, x: torch.Tensor):
+        assert x.ndim == 2 and x.shape[0] == 1, "x must be mono"
+        return torch.cat([x, x], dim=0)
+
+
+class RandomPan(CPUBase):
+    def __init__(
+        self,
+        min_pan: float = -1.0,
+        max_pan: float = 1.0,
+        **kwargs,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.min_pan = min_pan
+        self.max_pan = max_pan
+
+    def _transform(self, x: torch.Tensor):
+        """Constant power panning"""
+        assert x.ndim == 2 and x.shape[0] == 2, "x must be stereo"
+        theta = rand(self.min_pan, self.max_pan) * np.pi / 4
+        x = x * 0.707  # normalize to prevent clipping
+        left_x, right_x = x[0], x[1]
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        left_x = left_x * (cos_theta - sin_theta)
+        right_x = right_x * (cos_theta + sin_theta)
+        return torch.stack([left_x, right_x], dim=0)
