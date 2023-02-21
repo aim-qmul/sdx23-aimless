@@ -1,13 +1,10 @@
 from torch.utils.data import Dataset
 import torch
 import random
-import os
-from pathlib import Path
 import numpy as np
 import torchaudio
-from tqdm import tqdm
 from typing import Optional, Callable, List, Tuple
-
+from pathlib import Path
 
 __all__ = ["BaseDataset"]
 
@@ -17,10 +14,10 @@ class BaseDataset(Dataset):
 
     def __init__(
         self,
-        root: str,
+        tracks: List[Path],
+        track_lengths: List[int],
         sources: List[str],
         mix_name: str = "mix",
-        split: str = None,
         seq_duration: float = 6.0,
         samples_per_track: int = 64,
         random: bool = False,
@@ -28,26 +25,23 @@ class BaseDataset(Dataset):
         transform: Optional[Callable] = None,
     ):
         super().__init__()
-        root = Path(os.path.expanduser(root))
-        self.root = root
-        self.seq_duration = seq_duration
-        self.segment = int(self.seq_duration * self.sr)
-        self.split = split
-        self.samples_per_track = samples_per_track
-        self.random_track_mix = random_track_mix
-        self.random = random
+        self.tracks = tracks
+        self.track_lengths = track_lengths
         self.sources = sources
         self.mix_name = mix_name
+        self.seq_duration = seq_duration
+        self.samples_per_track = samples_per_track
+        self.segment = int(self.seq_duration * self.sr)
+        self.random = random
+        self.random_track_mix = random_track_mix
         self.transform = transform
-
-        self.tracks, self.track_lenghts = self.load_tracks()
 
         if self.seq_duration <= 0:
             self._size = len(self.tracks)
         elif self.random:
             self._size = len(self.tracks) * self.samples_per_track
         else:
-            chunks = [l // self.segment for l in self.track_lenghts]
+            chunks = [l // self.segment for l in self.track_lengths]
             cum_chunks = np.cumsum(chunks)
             self.cum_chunks = cum_chunks
             self._size = cum_chunks[-1]
@@ -90,7 +84,7 @@ class BaseDataset(Dataset):
                 track_idx = index // self.samples_per_track
                 folder_name, chunk_start = self.tracks[
                     track_idx
-                ], self._get_random_start(self.track_lenghts[track_idx])
+                ], self._get_random_start(self.track_lengths[track_idx])
             else:
                 folder_name, chunk_start = self._get_track_from_chunk(index)
             for s in self.sources:
@@ -98,7 +92,7 @@ class BaseDataset(Dataset):
                     track_idx = self._get_random_track_idx()
                     folder_name, chunk_start = self.tracks[
                         track_idx
-                    ], self._get_random_start(self.track_lenghts[track_idx])
+                    ], self._get_random_start(self.track_lengths[track_idx])
                 source_name = folder_name / (s + ".wav")
                 audio = torchaudio.load(
                     source_name,
@@ -114,7 +108,6 @@ class BaseDataset(Dataset):
                     num_frames=self.segment,
                     frame_offset=chunk_start,
                 )[0]
-
         y = torch.stack(stems)
         if self.transform is not None:
             x, y = self.transform((x, y))
