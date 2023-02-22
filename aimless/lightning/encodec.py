@@ -73,6 +73,10 @@ class SymbolicSeparator(pl.LightningModule):
             x = y.sum(1)
         y = y[:, self.targets_idx]
 
+        # convert to stereo 48k
+        x = self.convert2stereo48k(x)
+        y = self.convert2stereo48k(y)
+
         z = self.get_codes(x).permute(1, 2, 0)
         targets = self.get_codes(y.view(-1, *y.shape[-2:]))
         targets = targets.view(
@@ -89,6 +93,10 @@ class SymbolicSeparator(pl.LightningModule):
         x, y = batch
         y = y[:, self.targets_idx]
         N = y.shape[0]
+
+        # convert to stereo 48k
+        x = self.convert2stereo48k(x)
+        y = self.convert2stereo48k(y)
 
         z = self.get_codes(x).permute(1, 2, 0)
         targets = self.get_codes(y.view(-1, *y.shape[-2:]))
