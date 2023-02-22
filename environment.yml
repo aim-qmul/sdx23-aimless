@@ -22,3 +22,4 @@ dependencies:
     - torch_fftconv
     - streamlit 
     - librosa
+    - encodec
