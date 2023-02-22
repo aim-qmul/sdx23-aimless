@@ -3,7 +3,7 @@ seed_everything: true
 trainer:
   logger: true
   enable_checkpointing: true
-  callbacks: null
+  callbacks: pytorch_lightning.callbacks.LearningRateMonitor
   default_root_dir: "/import/c4dm-datasets-ext/sdx-2023/logs-cjs"
   gradient_clip_val: null
   gradient_clip_algorithm: null
@@ -19,7 +19,7 @@ trainer:
   track_grad_norm: -1
   check_val_every_n_epoch: 1
   fast_dev_run: false
-  accumulate_grad_batches: 12
+  accumulate_grad_batches: 8
   max_epochs: null
   min_epochs: null
   max_steps: -1
@@ -96,11 +96,10 @@ data:
     random_track_mix: true
     batch_size: 2
 optimizer:
-  class_path: torch.optim.Adam
+  class_path: torch.optim.AdamW
   init_args:
-    lr: 0.0003
+    lr: 0.0001
 lr_scehduler:
   class_path: torch.optim.lr_scheduler.CosineAnnealingLR
     init_args:
-      T_max: 100000
-  interval: step
+      T_max: 100
