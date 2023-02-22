@@ -57,15 +57,18 @@ model:
   class_path: aimless.lightning.waveform.CodecSeparator
   init_args:
     model: 
-      class_path: aimsless.models.code_split.CodeSplit
+      class_path: aimless.models.codeclm.CodecLM
       init_args:
         sources:
         - vocals
         - drums
         - bass
         - other
+        n_q: 16
+        card: 1024
+        dim: 128
     criterion: 
-      class_path: aimless.loss.time.L1Loss
+      class_path: torch.nn.NLLLoss
     transforms:
     - class_path: aimless.augment.SpeedPerturb
       init_args:
@@ -92,51 +95,13 @@ data:
     seq_duration: 6.0
     samples_per_track: 500
     transforms:
-    - class_path: data.augment.RandomParametricEQ
+    - class_path: data.augment.RandomGain
+    - class_path: data.augment.RandomFlipPhase
+    - class_path: data.augment.RandomSwapLR
+    - class_path: data.augment.LimitAug
       init_args:
         sample_rate: 44100
-        p: 0.7
-    - class_path: data.augment.RandomPedalboardDistortion
-      init_args:
-        sample_rate: 44100
-        p: 0.01
-    - class_path: data.augment.RandomPedalboardDelay
-      init_args:
-        sample_rate: 44100
-        p: 0.02
-    - class_path: data.augment.RandomPedalboardChorus
-      init_args:
-        sample_rate: 44100
-        p: 0.01
-    - class_path: data.augment.RandomPedalboardPhaser
-      init_args:
-        sample_rate: 44100
-        p: 0.01
-    - class_path: data.augment.RandomPedalboardCompressor
-      init_args:
-        sample_rate: 44100
-        p: 0.5
-    - class_path: data.augment.RandomPedalboardReverb
-      init_args:
-        sample_rate: 44100
-        p: 0.2
-    - class_path: data.augment.RandomStereoWidener
-      init_args:
-        sample_rate: 44100
-        p: 0.3
-    - class_path: data.augment.RandomPedalboardLimiter
-      init_args:
-        sample_rate: 44100
-        p: 0.1
-    - class_path: data.augment.RandomVolumeAutomation
-      init_args:
-        sample_rate: 44100
-        p: 0.1
-    - class_path: data.augment.LoudnessNormalize
-      init_args:
-        sample_rate: 44100
-        target_lufs_db: -32.0
-        p: 1.0
+    batch_size: 4
     random: true
     random_track_mix: true
     batch_size: 2

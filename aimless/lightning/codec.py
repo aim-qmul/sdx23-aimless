@@ -50,7 +50,7 @@ class CodecSeparator(pl.LightningModule):
         """
         mixture_codes = self.codec.encode(x)
         stem_codes = self.model(mixture_codes)
-        stems = self.codec.decode(mixture_codes)
+        stems = self.codec.decode(stem_codes)
         return stems
 
     def forward(self, x: torch.Tensor):
@@ -67,8 +67,8 @@ class CodecSeparator(pl.LightningModule):
 
         pred_stem_codes = self.model(x)
 
-        values["loss"] = loss
-        self.log_dict(values, prog_bar=False, sync_dist=True)
+        self.log("loss", prog_bar=False, sync_dist=True)
+
         return loss
 
     def validation_step(self, batch, batch_idx):
