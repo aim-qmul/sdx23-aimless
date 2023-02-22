@@ -79,12 +79,13 @@ class RandomSwapLR(CPUBase):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def _transform(self, stems: torch.Tensor):
-        tmp = torch.flip(stems, [1])
-        for i in range(stems.shape[0]):
-            if random.random() < self.p:
-                stems[i] = tmp[i]
-        return stems
+    def _transform(self, x: torch.Tensor):
+        left = x[0, :]
+        right = x[1, :]
+        if random.random() < self.p:
+            x[0, :] = right
+            x[1, :] = left
+        return x
 
 
 class RandomGain(CPUBase):
@@ -93,22 +94,20 @@ class RandomGain(CPUBase):
         self.low = low
         self.high = high
 
-    def _transform(self, stems):
+    def _transform(self, x: torch.Tensor):
         gains = (
-            torch.rand(stems.shape[0], 1, 1, device=stems.device)
-            * (self.high - self.low)
+            torch.rand(x.shape[0], 1, device=x.device) * (self.high - self.low)
             + self.low
         )
-        stems = stems * gains
-        return stems
+        x = x * gains
+        return x
 
 
 class RandomFlipPhase(RandomSwapLR):
-    def _transform(self, stems: torch.Tensor):
-        for i in range(stems.shape[0]):
-            if random.random() < self.p:
-                stems[i] *= -1
-        return stems
+    def _transform(self, x: torch.Tensor):
+        if random.random() < self.p:
+            x *= -1
+        return x
 
 
 def db2linear(x):
