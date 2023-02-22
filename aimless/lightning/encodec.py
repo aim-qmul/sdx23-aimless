@@ -109,7 +109,8 @@ class SymbolicSeparator(pl.LightningModule):
 
         pred_codes = pred.argmax(1).permute(3, 0, 1, 2)
         pred_codes = pred_codes.reshape(16, -1, pred_codes.shape[-1])
-        pred = self.decode(pred_codes).view(N, len(self.targets_idx), *pred.shape[-2:])
+        pred = self.decode(pred_codes)
+        pred = pred.view(N, len(self.targets_idx), *pred.shape[-2:])
 
         sdrs = (
             self.sdr(pred.view(-1, *pred.shape[-2:]), y.view(-1, *y.shape[-2:]))
