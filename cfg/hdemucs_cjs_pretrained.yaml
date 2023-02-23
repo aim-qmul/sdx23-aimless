@@ -64,6 +64,7 @@ model:
         - drums
         - bass
         - other
+        download_weights: true
     criterion: 
       class_path: aimless.loss.time.L1Loss
     transforms:

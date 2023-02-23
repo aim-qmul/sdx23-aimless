@@ -20,7 +20,7 @@ trainer:
   check_val_every_n_epoch: 1
   fast_dev_run: false
   accumulate_grad_batches: 8
-  max_epochs: null
+  max_epochs: 100
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -64,6 +64,7 @@ model:
         - drums
         - bass
         - other
+        download_weights: true
     criterion: 
       class_path: aimless.loss.time.L1Loss
     transforms:
@@ -138,12 +139,12 @@ data:
         sample_rate: 44100
     random: true
     random_track_mix: true
-    batch_size: 2
+    batch_size: 3
 optimizer:
   class_path: torch.optim.AdamW
   init_args:
     lr: 0.0001
-lr_scehduler:
+lr_scheduler:
   class_path: torch.optim.lr_scheduler.CosineAnnealingLR
-    init_args:
-      T_max: 100
+  init_args:
+    T_max: 100
