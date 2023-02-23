@@ -10,7 +10,7 @@ class PretrainedHDemucs(torch.nn.Module):
             bundle = HDEMUCS_HIGH_MUSDB_PLUS
             self.model = bundle.get_model()
         else:
-            self.model = torchaudio.models.hdemucs_high()
+            self.model = torchaudio.models.hdemucs_high(sources)
 
     def forward(self, x: torch.Tensor):
         return self.model(x)
