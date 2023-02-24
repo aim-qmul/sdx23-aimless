@@ -9,7 +9,7 @@ trainer:
   gradient_clip_algorithm: null
   num_nodes: 1
   num_processes: null
-  devices: 3
+  devices: 2
   gpus: null
   auto_select_gpus: false
   tpu_cores: null
@@ -19,7 +19,7 @@ trainer:
   track_grad_norm: -1
   check_val_every_n_epoch: 1
   fast_dev_run: false
-  accumulate_grad_batches: 8
+  accumulate_grad_batches: 12
   max_epochs: null
   min_epochs: null
   max_steps: -1
@@ -66,7 +66,7 @@ model:
         - other
         download_weights: true
     criterion: 
-      class_path: aimless.loss.time.L1Loss
+      class_path: aimless.loss.time.NegativeSDR
     transforms:
     - class_path: aimless.augment.SpeedPerturb
       init_args:
@@ -102,7 +102,12 @@ data:
     - class_path: data.augment.RandomSwapLR
       init_args:
         p: 0.5
-    - class_path: data.augment.LimitAug
-      init_args:
-        sample_rate: 44100
     batch_size: 3
+optimizer:
+  class_path: torch.optim.AdamW
+  init_args:
+    lr: 0.00005
+lr_scheduler:
+  class_path: torch.optim.lr_scheduler.CosineAnnealingLR
+  init_args:
+    T_max: 100
