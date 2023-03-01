@@ -11,6 +11,7 @@ dependencies:
   - torchaudio
   - torchvision
   - cudatoolkit=11.7
+  - einops
   - pip:
     - pytorch-lightning[extra]
     - torch-optimizer

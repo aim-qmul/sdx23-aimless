@@ -56,7 +56,7 @@ ckpt_path: null
 model:
   class_path: aimless.lightning.waveform.WaveformSeparator
   init_args:
-    model: 
+    model:
       class_path: aimless.models.dpt.DPT
       init_args:
         channels: 2
@@ -73,13 +73,13 @@ model:
         transformer_nonlinearity: GELU
         post_transformer_prelu: true
         mask_nonlinearity: ReLU
-    criterion: 
+    criterion:
       class_path: aimless.loss.time.L1Loss
     transforms:
     - class_path: aimless.augment.SpeedPerturb
       init_args:
         orig_freq: 44100
-        speeds: 
+        speeds:
         - 90
         - 100
         - 110
@@ -101,12 +101,51 @@ data:
     seq_duration: 10.0
     samples_per_track: 500
     transforms:
-    - class_path: data.augment.RandomGain
-    - class_path: data.augment.RandomFlipPhase
-    - class_path: data.augment.RandomSwapLR
-    - class_path: data.augment.LimitAug
+    - class_path: data.augment.RandomParametricEQ
       init_args:
         sample_rate: 44100
+        p: 0.7
+    - class_path: data.augment.RandomPedalboardDistortion
+      init_args:
+        sample_rate: 44100
+        p: 0.01
+    - class_path: data.augment.RandomPedalboardDelay
+      init_args:
+        sample_rate: 44100
+        p: 0.02
+    - class_path: data.augment.RandomPedalboardChorus
+      init_args:
+        sample_rate: 44100
+        p: 0.01
+    - class_path: data.augment.RandomPedalboardPhaser
+      init_args:
+        sample_rate: 44100
+        p: 0.01
+    - class_path: data.augment.RandomPedalboardCompressor
+      init_args:
+        sample_rate: 44100
+        p: 0.5
+    - class_path: data.augment.RandomPedalboardReverb
+      init_args:
+        sample_rate: 44100
+        p: 0.2
+    - class_path: data.augment.RandomStereoWidener
+      init_args:
+        sample_rate: 44100
+        p: 0.3
+    - class_path: data.augment.RandomPedalboardLimiter
+      init_args:
+        sample_rate: 44100
+        p: 0.1
+    - class_path: data.augment.RandomVolumeAutomation
+      init_args:
+        sample_rate: 44100
+        p: 0.1
+    - class_path: data.augment.LoudnessNormalize
+      init_args:
+        sample_rate: 44100
+        target_lufs_db: -32.0
+        p: 1.0
     random: true
     random_track_mix: true
     batch_size: 4
