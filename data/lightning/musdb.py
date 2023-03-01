@@ -18,6 +18,7 @@ class MUSDB(pl.LightningDataModule):
         random_track_mix: bool = False,
         transforms: List[CPUBase] = None,
         batch_size: int = 16,
+        ext: str = "wav",
     ):
         super().__init__()
         self.save_hyperparameters(
@@ -27,6 +28,7 @@ class MUSDB(pl.LightningDataModule):
             "random",
             "random_track_mix",
             "batch_size",
+            "ext",
         )
         # manually save transforms since pedalboard is not pickleable
         if transforms is None:
@@ -44,6 +46,7 @@ class MUSDB(pl.LightningDataModule):
                 random=self.hparams.random,
                 random_track_mix=self.hparams.random_track_mix,
                 transform=self.transforms,
+                ext=self.hparams.ext,
             )
 
         if stage == "validate" or stage == "fit":
@@ -51,6 +54,7 @@ class MUSDB(pl.LightningDataModule):
                 root=self.hparams.root,
                 subsets=["test"],
                 seq_duration=self.hparams.seq_duration,
+                ext=self.hparams.ext,
             )
 
     def train_dataloader(self):

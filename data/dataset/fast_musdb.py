@@ -18,19 +18,21 @@ class FastMUSDB(BaseDataset):
         root: str,
         subsets: List[str] = ["train", "test"],
         split: str = None,
-        **kwargs
+        ext: str = "wav",
+        **kwargs,
     ):
-        tracks, track_lengths = load_tracks(root, subsets, split)
+        tracks, track_lengths = load_tracks(root, subsets, split, ext)
         super().__init__(
             **kwargs,
             tracks=tracks,
             track_lengths=track_lengths,
             sources=SOURCES,
             mix_name="mixture",
+            ext=ext,
         )
 
 
-def load_tracks(root, subsets=None, split=None):
+def load_tracks(root, subsets=None, split=None, ext: str = "wav"):
     root = Path(os.path.expanduser(root))
     setup_path = os.path.join(musdb.__path__[0], "configs", "mus.yaml")
     with open(setup_path, "r") as f:
@@ -64,7 +66,7 @@ def load_tracks(root, subsets=None, split=None):
                 track_folder = subset_folder / track_name
                 # add track to list of tracks
                 tracks.append(track_folder)
-                meta = torchaudio.info(os.path.join(track_folder, "mixture.wav"))
+                meta = torchaudio.info(os.path.join(track_folder, f"mixture.{ext}"))
                 assert meta.sample_rate == FastMUSDB.sr
 
                 track_lengths.append(meta.num_frames)

@@ -23,6 +23,7 @@ class BaseDataset(Dataset):
         random: bool = False,
         random_track_mix: bool = False,
         transform: Optional[Callable] = None,
+        ext: str = "wav",
     ):
         super().__init__()
         self.tracks = tracks
@@ -35,6 +36,7 @@ class BaseDataset(Dataset):
         self.random = random
         self.random_track_mix = random_track_mix
         self.transform = transform
+        self.ext = ext
 
         if self.seq_duration <= 0:
             self._size = len(self.tracks)
@@ -73,10 +75,10 @@ class BaseDataset(Dataset):
         if self.seq_duration <= 0:
             folder_name = self.tracks[index]
             x = torchaudio.load(
-                folder_name / f"{self.mix_name}.wav",
+                folder_name / f"{self.mix_name}.{self.ext}",
             )[0]
             for s in self.sources:
-                source_name = folder_name / (s + ".wav")
+                source_name = folder_name / (s + f".{self.ext}")
                 audio = torchaudio.load(source_name)[0]
                 stems.append(audio)
         else:
@@ -93,7 +95,7 @@ class BaseDataset(Dataset):
                     folder_name, chunk_start = self.tracks[
                         track_idx
                     ], self._get_random_start(self.track_lengths[track_idx])
-                source_name = folder_name / (s + ".wav")
+                source_name = folder_name / (s + f".{self.ext}")
                 audio = torchaudio.load(
                     source_name,
                     num_frames=self.segment,
@@ -104,7 +106,7 @@ class BaseDataset(Dataset):
                 x = sum(stems)
             else:
                 x = torchaudio.load(
-                    folder_name / f"{self.mix_name}.wav",
+                    folder_name / f"{self.mix_name}.{self.ext}",
                     num_frames=self.segment,
                     frame_offset=chunk_start,
                 )[0]
