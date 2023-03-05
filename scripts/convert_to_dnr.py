@@ -480,6 +480,7 @@ class DatasetCompiler:
 
     def _get_filepaths(self, dir, c=""):
         files = glob(dir + "/**/*.wav", recursive=True)
+        files += glob(dir + "/**/*.flac", recursive=True)
         # If eval and speech, repeat list twice
         if self.partition == "eval" and c == "speech":
             return [x for item in files for x in repeat(item, 2)]
