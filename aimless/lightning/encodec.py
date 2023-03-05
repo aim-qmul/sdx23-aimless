@@ -1,6 +1,7 @@
 import pytorch_lightning as pl
 import torch
 from torch import nn
+import torch.nn.functional as F
 from typing import List, Dict
 from encodec import EncodecModel
 from torchaudio.transforms import Resample
@@ -37,7 +38,7 @@ class SymbolicSeparator(pl.LightningModule):
         )
 
         self.encodec = EncodecModel.encodec_model_48khz()
-        self.encodec.set_target_bandwidth(24)
+        self.encodec.set_target_bandwidth(3)
         for p in self.encodec.parameters():
             p.requires_grad = False
 
@@ -132,3 +133,97 @@ class SymbolicSeparator(pl.LightningModule):
 
         self.log("val_loss", avg_loss, prog_bar=True, sync_dist=True)
         self.log_dict(avg_values, prog_bar=False, sync_dist=True)
+
+
+class ARSeparator(SymbolicSeparator):
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        if len(self.transforms) > 0:
+            y = self.transforms(y)
+            x = y.sum(1)
+        y = y[:, self.targets_idx]
+        N = y.shape[0]
+
+        # convert to stereo 48k
+        x = self.convert2stereo48k(x)
+        y = self.convert2stereo48k(y)
+
+        # # get std and mean
+        # x_std = x.std((1, 2))
+        # x = x / x_std[:, None, None]
+        # y = y / x_std[:, None, None, None]
+
+        x_codes = self.get_codes(x).permute(1, 2, 0)
+        y_codes = (
+            self.get_codes(y.view(-1, *y.shape[-2:]))
+            .view(2, N, len(self.targets_idx), -1)
+            .permute(1, 2, 3, 0)
+        )
+        y_past = torch.cat(
+            [torch.zeros_like(y_codes[:, :, :1]), y_codes[:, :, :-1]], dim=2
+        )
+
+        # create causal mask
+        T = y_past.shape[2]
+        causal_mask = nn.Transformer.generate_square_subsequent_mask(
+            T, device=self.device
+        )
+
+        pred = self.model(x_codes, y_past, tgt_mask=causal_mask)
+        loss = self.criterion(pred, y_codes)
+
+        self.log("loss", loss, prog_bar=False, sync_dist=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y = y[:, self.targets_idx]
+        N = y.shape[0]
+
+        # convert to stereo 48k
+        x = self.convert2stereo48k(x)
+        y = self.convert2stereo48k(y)
+
+        # # get std and mean
+        # x_std = x.std((1, 2))
+        # x = x / x_std[:, None, None]
+        # y_rescaled = y / x_std[:, None, None, None]
+
+        x_codes = self.get_codes(x).permute(1, 2, 0)
+        y_codes = (
+            self.get_codes(y.view(-1, *y.shape[-2:]))
+            .view(2, N, len(self.targets_idx), -1)
+            .permute(1, 2, 3, 0)
+        )
+        y_past = torch.cat(
+            [torch.zeros_like(y_codes[:, :, :1]), y_codes[:, :, :-1]], dim=2
+        )
+
+        # create causal mask
+        T = y_past.shape[2]
+        causal_mask = nn.Transformer.generate_square_subsequent_mask(
+            T, device=self.device
+        )
+
+        pred = self.model(x_codes, y_past, tgt_mask=causal_mask)
+        loss = self.criterion(pred, y_codes)
+
+        pred_codes = pred.argmax(1).permute(3, 0, 1, 2)
+        pred_codes = pred_codes.reshape(2, -1, pred_codes.shape[-1])
+        pred = self.decode(pred_codes)
+        pred = pred.view(N, len(self.targets_idx), *pred.shape[-2:])
+
+        # scale back
+        # pred = pred * x_std[:, None, None, None]
+
+        sdrs = (
+            self.sdr(pred.view(-1, *pred.shape[-2:]), y.view(-1, *y.shape[-2:]))
+            .view(N, -1)
+            .mean(0)
+        )
+
+        values = {}
+        for i, t in enumerate(self.targets_idx):
+            values[f"{self.sources[t]}_sdr"] = sdrs[i].item()
+        values["avg_sdr"] = sdrs.mean().item()
+        return loss, values
