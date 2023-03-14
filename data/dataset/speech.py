@@ -19,8 +19,7 @@ class SpeechNoise(Dataset):
         seq_duration: float = 6.0,
         samples_per_track: int = 64,
         least_overlap_ratio: float = 0.5,
-        min_snr: float = 0.0,
-        max_snr: float = 20.0,
+        snr_sampler: Optional[torch.distributions.Distribution] = None,
         mono: bool = True,
         transform: Optional[Callable] = None,
     ):
@@ -49,8 +48,7 @@ class SpeechNoise(Dataset):
         self.least_overlap_ratio = least_overlap_ratio
         self.least_overlap_segment = int(least_overlap_ratio * self.segment)
         self.transform = transform
-        self.min_snr = min_snr
-        self.max_snr = max_snr
+        self.snr_sampler = snr_sampler
         self.mono = mono
 
         self._size = len(self.noise_files) * self.samples_per_track
@@ -83,7 +81,6 @@ class SpeechNoise(Dataset):
         speech_file = self.speech_files[speech_idx]
         speech_length = self.speech_track_lengths[speech_idx]
 
-        snr = random.uniform(self.min_snr, self.max_snr)
         if speech_length < self.least_overlap_segment:
             speech, _ = torchaudio.load(speech_file)
             if self.mono:
@@ -121,6 +118,7 @@ class SpeechNoise(Dataset):
             padded_speech[:, pos : pos + speech.shape[1]] = speech
             speech = padded_speech
 
+        snr = self.snr_sampler.sample()
         # scale noise to have the desired SNR
         noise_energy = noise.pow(2).sum()
         speech_energy = speech.pow(2).sum()
