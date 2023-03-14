@@ -4,6 +4,9 @@ from torch.utils.data import Dataset
 from pathlib import Path
 import random
 import torch
+import soundfile as sf
+import numpy as np
+from resampy import resample
 from typing import Optional, Callable
 
 __all__ = ["SpeechNoise"]
@@ -24,23 +27,35 @@ class SpeechNoise(Dataset):
         transform: Optional[Callable] = None,
     ):
         super().__init__()
-        speech_files = list(Path(speech_root).glob("**/*.wav"))
-        noise_files = list(Path(noise_root).glob("**/*.wav"))
+        speech_root = Path(speech_root)
+        noise_root = Path(noise_root)
+        speech_files = list(speech_root.glob("**/*.wav")) + list(
+            speech_root.glob("**/*.flac")
+        )
+        noise_files = list(Path(noise_root).glob("**/*.wav")) + list(
+            Path(noise_root).glob("**/*.flac")
+        )
 
-        speech_track_lengths = []
+        speech_track_frames = []
+        speech_track_sr = []
         for x in tqdm(speech_files):
-            assert torchaudio.info(x).sample_rate == SpeechNoise.sr
-            speech_track_lengths.append(torchaudio.info(x).num_frames)
+            info = torchaudio.info(x)
+            speech_track_frames.append(info.num_frames)
+            speech_track_sr.append(info.sample_rate)
 
-        noise_track_lengths = []
+        noise_track_frames = []
+        noise_track_sr = []
         for x in tqdm(noise_files):
-            assert torchaudio.info(x).sample_rate == SpeechNoise.sr
-            noise_track_lengths.append(torchaudio.info(x).num_frames)
+            info = torchaudio.info(x)
+            noise_track_frames.append(info.num_frames)
+            noise_track_sr.append(info.sample_rate)
 
         self.speech_files = speech_files
         self.noise_files = noise_files
-        self.speech_track_lengths = speech_track_lengths
-        self.noise_track_lengths = noise_track_lengths
+        self.speech_track_frames = speech_track_frames
+        self.noise_track_frames = noise_track_frames
+        self.speech_track_sr = speech_track_sr
+        self.noise_track_sr = noise_track_sr
 
         self.seq_duration = seq_duration
         self.samples_per_track = samples_per_track
@@ -64,68 +79,109 @@ class SpeechNoise(Dataset):
 
     def __getitem__(self, index):
         track_idx = index // self.samples_per_track
-        noise_file, chunk_start = self.noise_files[track_idx], self._get_random_start(
-            self.track_lengths[track_idx]
+        noise_sr = self.noise_track_sr[track_idx]
+        noise_resample_ratio = self.sr / noise_sr
+        noise_file = self.noise_files[track_idx]
+        pos_start = int(
+            self._get_random_start(
+                int(self.noise_track_frames[track_idx] * noise_resample_ratio)
+            )
+            / noise_resample_ratio
         )
+        frames = int(self.seq_duration * noise_sr)
+        noise, _ = sf.read(
+            noise_file, start=pos_start, frames=frames, fill_value=0, always_2d=True
+        )
+        if noise_sr != self.sr:
+            noise = resample(noise, noise_sr, self.sr, axis=0)
+            if noise.shape[0] < self.segment:
+                noise = np.pad(
+                    noise, ((0, self.segment - noise.shape[0]), (0, 0)), "constant"
+                )
+            else:
+                noise = noise[: self.segment]
 
-        noise, _ = torchaudio.load(
-            noise_file, frame_offset=chunk_start, num_frames=self.segment
-        )
         if self.mono:
-            noise = noise.mean(dim=0, keepdim=True)
+            noise = noise.mean(axis=1, keepdims=True)
         else:
-            noise = noise.broadcast_to(2, noise.shape[1])
+            noise = np.broadcast_to(noise, (noise.shape[0], 2))
 
         # get a random speech file
         speech_idx = random.randint(0, len(self.speech_files) - 1)
         speech_file = self.speech_files[speech_idx]
-        speech_length = self.speech_track_lengths[speech_idx]
+        speech_sr = self.speech_track_sr[speech_idx]
+        speech_resample_ratio = self.sr / speech_sr
+        speech_resampled_length = int(
+            self.speech_track_frames[speech_idx] * speech_resample_ratio
+        )
 
-        if speech_length < self.least_overlap_segment:
-            speech, _ = torchaudio.load(speech_file)
+        if speech_resampled_length < self.least_overlap_segment:
+            speech, _ = sf.read(speech_file, always_2d=True)
+            if speech_sr != self.sr:
+                speech = resample(speech, speech_sr, self.sr, axis=0)
+                speech_resampled_length = speech.shape[0]
+
             if self.mono:
-                speech = speech.mean(dim=0, keepdim=True)
+                speech = speech.mean(axis=1, keepdims=True)
             else:
-                speech = speech.broadcast_to(2, speech.shape[1])
+                speech = np.broadcast_to(speech, (speech.shape[0], 2))
 
-            pos = random.randint(0, self.segment - speech_length)
+            speech_energy = np.sum(speech**2)
+            pos = random.randint(0, self.segment - speech_resampled_length)
 
-            padded_speech = torch.zeros_like(noise)
-            padded_speech[:, pos : pos + speech_length] = speech
+            padded_speech = np.zeros_like(noise)
+            padded_speech[pos : pos + speech_resampled_length] = speech
             speech = padded_speech
         else:
             pos = random.randint(
-                self.least_overlap_segment - speech_length,
+                self.least_overlap_segment - speech_resampled_length,
                 self.segment - self.least_overlap_segment,
             )
             if pos < 0:
-                frame_offset = -pos
-                num_frames = speech_length + pos
+                pos_start = int(-pos / speech_resample_ratio)
+                frames = int(
+                    min(self.segment, (speech_resampled_length + pos))
+                    / speech_resample_ratio
+                )
             else:
-                frame_offset = 0
-                num_frames = min(speech_length, self.segment - pos)
+                pos_start = 0
+                frames = int(
+                    min(speech_resampled_length, self.segment - pos)
+                    / speech_resample_ratio
+                )
 
-            speech, _ = torchaudio.load(
-                speech_file, frame_offset=frame_offset, num_frames=num_frames
+            speech, _ = sf.read(
+                speech_file,
+                start=pos_start,
+                frames=frames,
+                fill_value=0,
+                always_2d=True,
             )
-            if self.mono:
-                speech = speech.mean(dim=0, keepdim=True)
-            else:
-                speech = speech.broadcast_to(2, speech.shape[1])
+            if speech_sr != self.sr:
+                speech = resample(speech, speech_sr, self.sr, axis=0)
 
-            padded_speech = torch.zeros_like(noise)
+            if self.mono:
+                speech = speech.mean(axis=1, keepdims=True)
+            else:
+                speech = np.broadcast_to(speech, (speech.shape[0], 2))
+
+            speech_energy = np.sum(speech**2)
+
+            padded_speech = np.zeros_like(noise)
             pos = max(0, pos)
-            padded_speech[:, pos : pos + speech.shape[1]] = speech
+            padded_speech[pos : pos + speech.shape[0]] = speech
             speech = padded_speech
+
+        speech = torch.from_numpy(speech.T).float()
+        noise = torch.from_numpy(noise.T).float()
 
         if self.snr_sampler is not None:
             snr = self.snr_sampler.sample()
             # scale noise to have the desired SNR
-            noise_energy = noise.pow(2).sum()
-            speech_energy = speech.pow(2).sum()
+            noise_energy = noise.pow(2).sum() + 1e-8
             noise = noise * torch.sqrt(speech_energy / noise_energy) * 10 ** (-snr / 10)
 
-        stems = torch.cat([speech, noise], dim=0)
+        stems = torch.stack([speech, noise], dim=0)
         mix = speech + noise
 
         if self.transform is not None:
