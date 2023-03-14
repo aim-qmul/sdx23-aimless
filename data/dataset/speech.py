@@ -126,5 +126,6 @@ class SpeechNoise(Dataset):
         speech_energy = speech.pow(2).sum()
         noise = noise * torch.sqrt(speech_energy / noise_energy) * 10 ** (-snr / 10)
 
+        stems = torch.cat([speech, noise], dim=0)
         mix = speech + noise
-        return mix, speech
+        return mix, stems
