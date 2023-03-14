@@ -118,12 +118,17 @@ class SpeechNoise(Dataset):
             padded_speech[:, pos : pos + speech.shape[1]] = speech
             speech = padded_speech
 
-        snr = self.snr_sampler.sample()
-        # scale noise to have the desired SNR
-        noise_energy = noise.pow(2).sum()
-        speech_energy = speech.pow(2).sum()
-        noise = noise * torch.sqrt(speech_energy / noise_energy) * 10 ** (-snr / 10)
+        if self.snr_sampler is not None:
+            snr = self.snr_sampler.sample()
+            # scale noise to have the desired SNR
+            noise_energy = noise.pow(2).sum()
+            speech_energy = speech.pow(2).sum()
+            noise = noise * torch.sqrt(speech_energy / noise_energy) * 10 ** (-snr / 10)
 
         stems = torch.cat([speech, noise], dim=0)
         mix = speech + noise
+
+        if self.transform is not None:
+            mix, stems = self.transform((mix, stems))
+
         return mix, stems
