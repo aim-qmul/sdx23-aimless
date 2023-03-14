@@ -43,7 +43,6 @@ class SpeechNoise(pl.LightningDataModule):
             self.train_dataset = SpeechNoiseDataset(
                 speech_root=self.hparams.speech_root,
                 noise_root=self.hparams.noise_root,
-                split="train",
                 seq_duration=self.hparams.seq_duration,
                 samples_per_track=self.hparams.samples_per_track,
                 least_overlap_ratio=self.hparams.least_overlap_ratio,
