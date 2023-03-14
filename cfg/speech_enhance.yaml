@@ -1,0 +1,70 @@
+# pytorch_lightning==1.8.5.post0
+seed_everything: true
+trainer:
+  detect_anomaly: true
+  callbacks:
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      save_last: true
+      every_n_train_steps: 2000
+      filename: "{epoch}-{step}"
+  - class_path: pytorch_lightning.callbacks.ModelSummary
+    init_args:
+      max_depth: 2
+  log_every_n_steps: 1
+  accelerator: gpu
+  strategy: ddp
+  sync_batchnorm: true
+  precision: 32
+ckpt_path: null
+model:
+  class_path: aimless.lightning.waveform.WaveformSeparator
+  init_args:
+    model: 
+      class_path: torchaudio.models.HDemucs
+      init_args:
+        sources:
+        - speech
+        channels: 48
+        audio_channels: 1
+    criterion: 
+      class_path: aimless.loss.time.L1Loss
+    transforms:
+    - class_path: aimless.augment.SpeedPerturb
+      init_args:
+        orig_freq: 44100
+        speeds: 
+        - 90
+        - 100
+        - 110
+        p: 0.2
+    - class_path: aimless.augment.RandomPitch
+      init_args:
+        semitones:
+        - -1
+        - 1
+        - 0
+        - 1
+        - 2
+        p: 0.2
+    target_track: se
+    targets: {speech}
+data:
+  class_path: data.lightning.SpeechNoise
+  init_args:
+    speech_root: /import/c4dm-datasets/VCTK-Corpus-0.92/wav48_silence_trimmed/
+    noise_root: /import/c4dm-datasets-ext/musdb18hq-voiceless-mix/
+    seq_duration: 6.0
+    samples_per_track: 64
+    least_overlap_ratio: 0.5
+    mono: true
+    snr_sampler:
+      class_path: torch.distributions.Uniform
+      init_args:
+        low: 0
+        high: 20
+    batch_size: 8
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.0003
