@@ -6,7 +6,7 @@ from typing import List, Dict
 from ..loss.time import TLoss, SDR
 from ..augment import CudaBase
 
-from ..utils import MDX_SOURCES, SDX_SOURCES
+from ..utils import MDX_SOURCES, SDX_SOURCES, SE_SOURCES
 
 
 class WaveformSeparator(pl.LightningModule):
@@ -15,7 +15,8 @@ class WaveformSeparator(pl.LightningModule):
         model: nn.Module,
         criterion: TLoss,
         transforms: List[CudaBase] = None,
-        use_sdx_targets: bool = False,
+        use_sdx_targets: bool = False,  # will be deprecated, please use target_track
+        target_track: str = None,
         targets: Dict[str, None] = {},
     ):
         super().__init__()
@@ -27,7 +28,17 @@ class WaveformSeparator(pl.LightningModule):
         if transforms is None:
             transforms = []
 
-        self.sources = SDX_SOURCES if use_sdx_targets else MDX_SOURCES
+        if target_track is not None:
+            if target_track == "sdx":
+                self.sources = SDX_SOURCES
+            elif target_track == "mdx":
+                self.sources = MDX_SOURCES
+            elif target_track == "se":
+                self.sources = SE_SOURCES
+            else:
+                raise ValueError(f"Invalid target track: {target_track}")
+        else:
+            self.sources = SDX_SOURCES if use_sdx_targets else MDX_SOURCES
 
         self.transforms = nn.Sequential(*transforms)
         self.register_buffer(
@@ -46,6 +57,8 @@ class WaveformSeparator(pl.LightningModule):
         y = y[:, self.targets_idx].squeeze(1)
 
         pred = self.model(x)
+        if pred.ndim == 4:
+            pred = pred.squeeze(1)
         loss, values = self.criterion(pred, y, x)
 
         values["loss"] = loss
