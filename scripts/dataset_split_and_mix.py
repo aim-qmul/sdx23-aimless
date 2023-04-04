@@ -7,14 +7,16 @@ import sys
 # Run with python scripts/dataset_split_and_mix.py /path/to/dataset
 def main():
     root = Path(sys.argv[1])
-    splits = [0.8, 0.1, 0.1]
+    splits = [0.9, 0.1, 0]
 
     train = root / "train"
+    # train = Path("./") / "train"
     valid = root / "valid"
-    test = root / "test"
+    # valid = Path("./") / "valid"
+    # test = root / "test"
     train.mkdir(exist_ok=True)
     valid.mkdir(exist_ok=True)
-    test.mkdir(exist_ok=True)
+    # test.mkdir(exist_ok=True)
     total_tracks = len(list(root.iterdir())) - 3  # 3 for train, valid, test
     num_train = int(total_tracks * splits[0])
     num_valid = int(total_tracks * splits[1])
@@ -23,12 +25,12 @@ def main():
     # Add remainder as necessary
     remainder = total_tracks - (num_train + num_valid + num_test)
     for i in range(remainder):
-        if i % 3 == 0:
+        if i % 2 == 0:
             num_train += 1
-        elif i % 3 == 1:
+        elif i % 2 == 1:
             num_valid += 1
-        else:
-            num_test += 1
+        # else:
+        #     num_test += 1
 
     num = 0
     for d in tqdm(root.iterdir(), total=total_tracks):
@@ -42,10 +44,11 @@ def main():
 
             if num < num_train:
                 d.rename(train / d.name)
-            elif num < num_train + num_valid:
-                d.rename(valid / d.name)
+            # elif num < num_train + num_valid:
             else:
-                d.rename(test / d.name)
+                d.rename(valid / d.name)
+            # else:
+            #     d.rename(test / d.name)
             num += 1
 
 

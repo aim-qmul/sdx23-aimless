@@ -12,13 +12,13 @@ trainer:
       max_depth: 2
   logger: true
   enable_checkpointing: true
-  callbacks: null
+#  callbacks: null
   default_root_dir: null
   gradient_clip_val: null
   gradient_clip_algorithm: null
   num_nodes: 1
   num_processes: null
-  devices: null
+  devices: 1
   gpus: null
   auto_select_gpus: false
   tpu_cores: null
@@ -40,6 +40,7 @@ trainer:
   limit_predict_batches: null
   val_check_interval: null
   log_every_n_steps: 1
+#  accelerator: cpu
   accelerator: gpu
   strategy: ddp
   sync_batchnorm: true
@@ -96,11 +97,14 @@ model:
         p: 0.2
     targets: {vocals, drums, bass, other}
 data:
-  class_path: data.lightning.MUSDB
+  class_path: data.lightning.LabelNoise
   init_args:
-    root: /import/c4dm-datasets-ext/musdb18hq/
+#    root: /import/c4dm-datasets-ext/musdb18hq/
+#    root: /Volumes/samsung_t5/moisesdb23_labelnoise_v1.0_split
+    root: /import/c4dm-datasets-ext/cm007/moisesdb23_labelnoise_v1.0_split
     seq_duration: 10.0
-    samples_per_track: 500
+#    samples_per_track: 1
+    samples_per_track: 100
     transforms:
     - class_path: data.augment.RandomParametricEQ
       init_args:
@@ -148,8 +152,9 @@ data:
         target_lufs_db: -32.0
         p: 1.0
     random: true
-    random_track_mix: true
-    batch_size: 4
+    random_track_mix: false
+#    batch_size: 1
+    batch_size: 5
 optimizer:
   class_path: torch.optim.Adam
   init_args:
