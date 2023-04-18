@@ -8,7 +8,7 @@ from ..loss.time import SDR
 from ..loss.freq import FLoss
 from ..augment import CudaBase
 
-from ..utils import MWF, MDX_SOURCES, SDX_SOURCES
+from ..utils import MWF, MDX_SOURCES, SDX_SOURCES, SE_SOURCES
 
 
 class MaskPredictor(pl.LightningModule):
@@ -17,7 +17,7 @@ class MaskPredictor(pl.LightningModule):
         model: nn.Module,
         criterion: FLoss,
         transforms: List[CudaBase] = None,
-        use_sdx_targets: bool = False,
+        target_track: str = None,
         targets: Dict[str, None] = {},
         n_fft: int = 4096,
         hop_length: int = 1024,
@@ -36,7 +36,14 @@ class MaskPredictor(pl.LightningModule):
             transforms = []
 
         self.transforms = nn.Sequential(*transforms)
-        self.sources = SDX_SOURCES if use_sdx_targets else MDX_SOURCES
+        if target_track == "sdx":
+            self.sources = SDX_SOURCES
+        elif target_track == "mdx":
+            self.sources = MDX_SOURCES
+        elif target_track == "se":
+            self.sources = SE_SOURCES
+        else:
+            raise ValueError(f"Invalid target track: {target_track}")
         self.register_buffer(
             "targets_idx",
             torch.tensor(sorted([self.sources.index(target) for target in targets])),
