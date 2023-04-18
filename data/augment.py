@@ -435,6 +435,16 @@ class RandomVolumeAutomation(CPUBase):
 
         segment_lengths = np.maximum(segment_lengths, 1)
 
+        # check the sum is equal to the length of the signal
+        diff = segment_lengths.sum() - x.shape[-1]
+        if diff < 0:
+            segment_lengths[-1] += diff
+        elif diff > 0:
+            for idx in range(num_segments):
+                if segment_lengths[idx] > diff + 1:
+                    segment_lengths[idx] -= diff
+                    break
+
         samples_filled = 0
         start_gain_db = 0
         for idx in range(num_segments):
