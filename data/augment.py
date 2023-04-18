@@ -433,6 +433,8 @@ class RandomVolumeAutomation(CPUBase):
             * np.random.dirichlet([rand(0, 10) for _ in range(num_segments)], 1)
         ).astype("int")[0]
 
+        segment_lengths = np.maximum(segment_lengths, 1)
+
         samples_filled = 0
         start_gain_db = 0
         for idx in range(num_segments):
