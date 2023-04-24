@@ -276,7 +276,9 @@ class BandSplitRNNMulti(nn.Module):
         # stage 3: band merge modules and mask prediction modules
         tmp = []
         for i, (mlp, norm) in enumerate(zip(self.mlps, self.norm2_list)):
-            tmp.append(mlp(norm(x[:, i])).view(x.shape[0], x.shape[2], self.n_sources, -1))
+            tmp.append(
+                mlp(norm(x[:, i])).view(x.shape[0], x.shape[2], self.n_sources, -1)
+            )
 
         mask = (
             torch.cat(tmp, dim=-1)
