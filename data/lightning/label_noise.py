@@ -48,7 +48,7 @@ class LabelNoise(pl.LightningDataModule):
                 samples_per_track=self.hparams.samples_per_track,
                 random=self.hparams.random,
                 random_track_mix=self.hparams.random_track_mix,
-                # transform=self.transforms,
+                transform=self.transforms,
                 clean_csv_path=label_noise_path,
             )
 
@@ -57,8 +57,9 @@ class LabelNoise(pl.LightningDataModule):
                 root=self.hparams.root,
                 split="train",
                 seq_duration=self.hparams.seq_duration,
-                random=False,
-                random_track_mix=False,
+                random=self.hparams.random,
+                random_track_mix=self.hparams.random_track_mix,
+                transform=self.transforms,
                 clean_csv_path=label_noise_path,
             )
 
