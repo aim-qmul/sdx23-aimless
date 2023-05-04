@@ -1,5 +1,5 @@
 # pytorch_lightning==1.8.5.post0
-seed_everything: 2434
+seed_everything: 45
 trainer:
   logger: true
   enable_checkpointing: true
@@ -27,8 +27,8 @@ trainer:
   gradient_clip_algorithm: null
   num_nodes: 1
   num_processes: null
-  devices: 1
-#  devices: 2
+#  devices: 1
+  devices: 4
   gpus: null
   auto_select_gpus: false
   tpu_cores: null
@@ -36,7 +36,7 @@ trainer:
   enable_progress_bar: true
   overfit_batches: 0.0
   track_grad_norm: -1
-  check_val_every_n_epoch: 1
+  check_val_every_n_epoch: 10
   fast_dev_run: false
   accumulate_grad_batches: 4
   max_epochs: -1
@@ -71,7 +71,10 @@ trainer:
   move_metrics_to_cpu: false
   multiple_trainloader_mode: max_size_cycle
   inference_mode: true
-ckpt_path: null
+#ckpt_path: null
+#ckpt_path: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/aug_random_mix__epoch=265-step=140000.ckpt
+#ckpt_path: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/aug3__epoch=447-step=172000.ckpt
+ckpt_path: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/epoch=750-step=212000.ckpt
 model:
   class_path: aimless.lightning.waveform.WaveformSeparator
   init_args:
@@ -113,7 +116,7 @@ model:
         - 90
         - 100
         - 110
-        p: 0.2
+        p: 0.3
     - class_path: aimless.augment.RandomPitch
       init_args:
         semitones:
@@ -122,7 +125,7 @@ model:
         - 0
         - 1
         - 2
-        p: 0.2
+        p: 0.3
     targets: {vocals, drums, bass, other}
 data:
   class_path: data.lightning.LabelNoise
@@ -137,59 +140,59 @@ data:
     - class_path: data.augment.RandomParametricEQ
       init_args:
         sample_rate: 44100
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.RandomPedalboardDistortion
       init_args:
         sample_rate: 44100
-        p: 0.01
+        p: 0.03
     - class_path: data.augment.RandomPedalboardDelay
       init_args:
         sample_rate: 44100
-        p: 0.01
+        p: 0.03
     - class_path: data.augment.RandomPedalboardChorus
       init_args:
         sample_rate: 44100
-        p: 0.01
+        p: 0.03
     - class_path: data.augment.RandomPedalboardPhaser
       init_args:
         sample_rate: 44100
-        p: 0.01
+        p: 0.03
     - class_path: data.augment.RandomPedalboardCompressor
       init_args:
         sample_rate: 44100
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.RandomPedalboardReverb
       init_args:
         sample_rate: 44100
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.RandomStereoWidener
       init_args:
         sample_rate: 44100
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.RandomPedalboardLimiter
       init_args:
         sample_rate: 44100
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.RandomVolumeAutomation
       init_args:
         sample_rate: 44100
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.LoudnessNormalize
       init_args:
         sample_rate: 44100
         target_lufs_db: -32.0
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.RandomGain
       init_args:
         low: 0.25
         high: 1.25
-        p: 0.2
+        p: 0.3
     - class_path: data.augment.RandomFlipPhase
       init_args:
-        p: 0.2
+        p: 0.3
     - class_path: data.augment.RandomSwapLR
       init_args:
-        p: 0.2
+        p: 0.3
     random: true
 #    include_val: true
     random_track_mix: true
