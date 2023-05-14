@@ -37,7 +37,7 @@ trainer:
   - class_path: pytorch_lightning.callbacks.ModelSummary
     init_args:
       max_depth: 2
-  default_root_dir: /import/c4dm-datasets-ext/ycy_sdx23_checkpoints/
+  default_root_dir: null
   gradient_clip_val: null
   gradient_clip_algorithm: null
   num_nodes: 1
