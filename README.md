@@ -48,7 +48,7 @@ Similarly, copy the last checkpoint of BandSplitRNN to `my_submission/lightning_
 After these steps, you have reproduced our submission!
 
 The inference procedure in our submission repository is a bit complex.
-Briefly speaking, the Hdemucs predicts the targets independently for each channels of the stereo mixture, plus, the average (the mid) and the difference (the side) of the two channels.
+Briefly speaking, the HDemucs predicts the targets independently for each channels of the stereo mixture, plus, the average (the mid) and the difference (the side) of the two channels.
 The stereo separated sources are made from a linear combination of these mono predictions.
 The separated music from the BandSplitRNN is enhanced by Wiener Filtering, and the final music predictions is the average from the two models.
 
