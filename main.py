@@ -6,11 +6,7 @@ from pytorch_lightning.strategies import DDPStrategy
 
 
 def cli_main():
-    # torch.backends.cudnn.benchmark = True
-    # torch.backends.cudnn.benchmark = False
     torch.set_float32_matmul_precision("medium")
-    # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 
     cli = LightningCLI(
         trainer_defaults={
