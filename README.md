@@ -26,6 +26,8 @@ python main.py fit --config cfg/demucs.yaml
 
 ## Reproduce the winning submission
 
+### CDX Leaderboard A, submission ID 220319
+
 This section describes how to reproduce the models we used in our [winning submission](https://gitlab.aicrowd.com/yoyololicon/cdx-submissions/-/issues/90) on CDX leaderboard A.
 The submission consists of one HDemucs predicting all the targets and one BandSplitRNN predicitng the music from the mixture.
 
@@ -51,6 +53,34 @@ The inference procedure in our submission repository is a bit complex.
 Briefly speaking, the HDemucs predicts the targets independently for each channels of the stereo mixture, plus, the average (the mid) and the difference (the side) of the two channels.
 The stereo separated sources are made from a linear combination of these mono predictions.
 The separated music from the BandSplitRNN is enhanced by Wiener Filtering, and the final music predictions is the average from the two models.
+
+### MDX Leaderboard A (Label Noise), submission ID 220426
+
+This section describes how to reproduce the model we used in our [winning submission](https://gitlab.aicrowd.com/yoyololicon/mdx23-submissions/-/issues/76) on MDX leaderboard A.
+
+Firstly, we manually inspected the [label noise dataset](https://www.aicrowd.com/challenges/sound-demixing-challenge-2023/problems/music-demixing-track-mdx-23/dataset_files) and labeled the clean songs (no label noise).
+The labels are recorded in `data/lightning/label_noise.csv`.
+Then, a HDemucs was trained only on the clean labels with the following settings:
+
+* negative SDR as the loss function
+* Training occurs on random chunks and random stem combinations of the clean songs
+* Training batches are augmented and processed using different random effects
+* Due to all this randomization, validation is done also on the training dataset (no separate validation set)
+
+To reproduce the training:
+```commandline
+python main.py fit --config cfg/mdx_a/hdemucs.yaml --data.init_args.root /DATASET_ROOT/
+```
+Remember to place the label noise data under `/DATASET_ROOT/train/`.
+
+Other details:
+* Model is trained for ~800 epochs (approx. 2 weeks on 4 RTX A50000)
+* During the last ~200 epochs, the learning rate is reduced to 0.001, gradient accumulation is increased to 64, and the effect randomization chance is increased by a factor of 1.666 (e.g. 30% to 50% etc.)
+
+After training, please go to our [submission repository](https://gitlab.aicrowd.com/yoyololicon/mdx23-submissions/) and checkout the tag `submission-cm-acc64-4d-lr001-e1213-last`.
+Then, copy the checkpoint to `my_submission/acc64_4devices_lr0001_e1213_last.ckpt ` in the submission repository.
+After these steps, you have reproduced our submission!
+
 
 ## Structure
 
@@ -88,11 +118,4 @@ For the value of `ACCESS_TOKEN` please refer to [#24](https://github.com/yoyolol
 
 ### Training Details
 
-* Clean songs (no label noise) are hand-labeled and recorded in `data/lightning/label_noise.csv`
-* A hybrid demux model is trained with negative SDR as the loss function
-* Training occurs on random chunks and random stem combinations of the clean songs
-* Training batches are augmented and processed using different random effects
-* Due to all this randomization, validation is done also on the training dataset (no separate validation set)
-* All details and hyperparameters are contained in `cfg/hdemucs.yaml`
-* Model is trained for ~800 epochs (approx. 2 weeks on 4 GPUs)
-* During the last ~200 epochs, the learning rate is reduced to 0.001, gradient accumulation is increased to 64, and the effect randomization chance is increased by a factor of 1.666 (e.g. 30% to 50% etc.)
+
