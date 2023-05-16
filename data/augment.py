@@ -430,7 +430,9 @@ class RandomVolumeAutomation(CPUBase):
         num_segments = randint(1, max_num_segments)
         segment_lengths = (
             x.shape[-1]
-            * np.random.dirichlet([rand(0, 10) for _ in range(num_segments)], 1)  # TODO(cm): this can crash training
+            * np.random.dirichlet(
+                [rand(0, 10) for _ in range(num_segments)], 1
+            )  # TODO(cm): this can crash training
         ).astype("int")[0]
 
         segment_lengths = np.maximum(segment_lengths, 1)
