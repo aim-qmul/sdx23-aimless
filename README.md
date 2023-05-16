@@ -39,7 +39,7 @@ Remember to change `/DNR_DATASET_ROOT/dnr_v2/` to your download location of [Div
 
 To train the BandSplitRNN:
 ```commandline
-python main.py fit --config cfg/cdx_a/bandsplit_rnn.yaml --data.init_args.root DNR_DATASET_ROOT/dnr_v2/
+python main.py fit --config cfg/cdx_a/bandsplit_rnn.yaml --data.init_args.root /DNR_DATASET_ROOT/dnr_v2/
 ```
 
 We trained the models with no more than 4 GPUs, depending on the resources we had at the time.
