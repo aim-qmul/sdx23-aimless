@@ -114,8 +114,3 @@ Then open [http://localhost:8501/](http://localhost:8501/) in your browser.
 pip install git+https://yoyololicon:ACCESS_TOKEN@github.com/yoyololicon/mdx23-aim-playground
 ```
 For the value of `ACCESS_TOKEN` please refer to [#24](https://github.com/yoyololicon/mdx23-aim-playground/issues/24#issuecomment-1420952853).
-
-
-### Training Details
-
-
