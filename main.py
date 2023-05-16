@@ -1,5 +1,3 @@
-import os
-
 import torch
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning.strategies import DDPStrategy
