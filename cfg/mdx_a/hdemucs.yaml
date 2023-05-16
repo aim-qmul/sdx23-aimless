@@ -1,24 +1,34 @@
 # pytorch_lightning==1.8.5.post0
-seed_everything: true
+seed_everything: 45
 trainer:
+  logger: true
+  enable_checkpointing: true
   callbacks:
   - class_path: pytorch_lightning.callbacks.ModelCheckpoint
     init_args:
+      dirpath: null
+      filename: null
+      monitor: null
+      verbose: false
       save_last: true
+      save_top_k: 1
+      save_weights_only: false
+      mode: min
+      auto_insert_metric_name: true
       every_n_train_steps: 2000
-      filename: "{epoch}-{step}"
+      train_time_interval: null
+      every_n_epochs: null
+      save_on_train_epoch_end: null
   - class_path: pytorch_lightning.callbacks.ModelSummary
     init_args:
       max_depth: 2
-  logger: true
-  enable_checkpointing: true
-#  callbacks: null
-  default_root_dir: null
+  default_root_dir: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/
   gradient_clip_val: null
   gradient_clip_algorithm: null
   num_nodes: 1
   num_processes: null
-  devices: 1
+#  devices: 1
+  devices: 4
   gpus: null
   auto_select_gpus: false
   tpu_cores: null
@@ -26,10 +36,12 @@ trainer:
   enable_progress_bar: true
   overfit_batches: 0.0
   track_grad_norm: -1
-  check_val_every_n_epoch: 1
+  check_val_every_n_epoch: 10
   fast_dev_run: false
-  accumulate_grad_batches: null
-  max_epochs: null
+  accumulate_grad_batches: 4
+#  accumulate_grad_batches: 32
+#  accumulate_grad_batches: 64
+  max_epochs: -1
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -40,10 +52,9 @@ trainer:
   limit_predict_batches: null
   val_check_interval: null
   log_every_n_steps: 1
-#  accelerator: cpu
   accelerator: gpu
   strategy: ddp
-  sync_batchnorm: true
+  sync_batchnorm: false
   precision: 32
   enable_model_summary: true
   num_sanity_val_steps: 2
@@ -63,6 +74,7 @@ trainer:
   multiple_trainloader_mode: max_size_cycle
   inference_mode: true
 ckpt_path: null
+#ckpt_path: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/epoch=750-step=212000.ckpt
 model:
   class_path: aimless.lightning.waveform.WaveformSeparator
   init_args:
@@ -74,9 +86,28 @@ model:
         - drums
         - bass
         - other
-        channels: 48
+        audio_channels: 2
+        channels: 64
+        growth: 2
+        nfft: 4096
+        depth: 6
+        freq_emb: 0.2
+        emb_scale: 10
+        emb_smooth: true
+        kernel_size: 8
+        time_stride: 2
+        stride: 4
+        context: 1
+        context_enc: 0
+        norm_starts: 4
+        norm_groups: 4
+        dconv_depth: 2
+        dconv_comp: 4
+        dconv_attn: 4
+        dconv_lstm: 4
+        dconv_init: 0.0001
     criterion:
-      class_path: aimless.loss.time.L1Loss
+      class_path: aimless.loss.time.NegativeSDR
     transforms:
     - class_path: aimless.augment.SpeedPerturb
       init_args:
@@ -85,7 +116,7 @@ model:
         - 90
         - 100
         - 110
-        p: 0.2
+        p: 0.3
     - class_path: aimless.augment.RandomPitch
       init_args:
         semitones:
@@ -94,7 +125,7 @@ model:
         - 0
         - 1
         - 2
-        p: 0.2
+        p: 0.3
     targets: {vocals, drums, bass, other}
 data:
   class_path: data.lightning.LabelNoise
@@ -104,36 +135,36 @@ data:
     root: /import/c4dm-datasets-ext/cm007/moisesdb23_labelnoise_v1.0_split
     seq_duration: 10.0
 #    samples_per_track: 1
-    samples_per_track: 100
+    samples_per_track: 144
     transforms:
     - class_path: data.augment.RandomParametricEQ
       init_args:
         sample_rate: 44100
-        p: 0.7
+        p: 0.3
     - class_path: data.augment.RandomPedalboardDistortion
       init_args:
         sample_rate: 44100
-        p: 0.01
+        p: 0.03
     - class_path: data.augment.RandomPedalboardDelay
       init_args:
         sample_rate: 44100
-        p: 0.02
+        p: 0.03
     - class_path: data.augment.RandomPedalboardChorus
       init_args:
         sample_rate: 44100
-        p: 0.01
+        p: 0.03
     - class_path: data.augment.RandomPedalboardPhaser
       init_args:
         sample_rate: 44100
-        p: 0.01
+        p: 0.03
     - class_path: data.augment.RandomPedalboardCompressor
       init_args:
         sample_rate: 44100
-        p: 0.5
+        p: 0.3
     - class_path: data.augment.RandomPedalboardReverb
       init_args:
         sample_rate: 44100
-        p: 0.2
+        p: 0.3
     - class_path: data.augment.RandomStereoWidener
       init_args:
         sample_rate: 44100
@@ -141,21 +172,45 @@ data:
     - class_path: data.augment.RandomPedalboardLimiter
       init_args:
         sample_rate: 44100
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.RandomVolumeAutomation
       init_args:
         sample_rate: 44100
-        p: 0.1
+        p: 0.3
     - class_path: data.augment.LoudnessNormalize
       init_args:
         sample_rate: 44100
         target_lufs_db: -32.0
-        p: 1.0
+        p: 0.3
+    - class_path: data.augment.RandomGain
+      init_args:
+        low: 0.25
+        high: 1.25
+        p: 0.3
+    - class_path: data.augment.RandomFlipPhase
+      init_args:
+        p: 0.3
+    - class_path: data.augment.RandomSwapLR
+      init_args:
+        p: 0.3
     random: true
-    random_track_mix: false
+#    include_val: true
+    random_track_mix: true
 #    batch_size: 1
-    batch_size: 5
+    batch_size: 3
 optimizer:
   class_path: torch.optim.Adam
   init_args:
     lr: 0.0003
+#    lr: 0.0001
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    weight_decay: 0
+    amsgrad: false
+    foreach: null
+    maximize: false
+    capturable: false
+    differentiable: false
+    fused: false
