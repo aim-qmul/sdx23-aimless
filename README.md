@@ -56,3 +56,15 @@ Then open [http://localhost:8501/](http://localhost:8501/) in your browser.
 pip install git+https://yoyololicon:ACCESS_TOKEN@github.com/yoyololicon/mdx23-aim-playground
 ```
 For the value of `ACCESS_TOKEN` please refer to [#24](https://github.com/yoyololicon/mdx23-aim-playground/issues/24#issuecomment-1420952853).
+
+
+### Training Details
+
+* Clean songs (no label noise) are hand-labeled and recorded in `data/lightning/label_noise.csv`
+* A hybrid demux model is trained with negative SDR as the loss function
+* Training occurs on random chunks and random stem combinations of the clean songs
+* Training batches are augmented and processed using different random effects
+* Due to all this randomization, validation is done also on the training dataset (no separate validation set)
+* All details and hyperparameters are contained in `cfg/hdemucs.yaml`
+* Model is trained for ~800 epochs (approx. 2 weeks on 4 GPUs)
+* During the last ~200 epochs, the learning rate is reduced to 0.001, gradient accumulation is increased to 64, and the effect randomization chance is increased by a factor of 1.666 (e.g. 30% to 50% etc.)

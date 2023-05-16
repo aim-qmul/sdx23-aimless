@@ -39,6 +39,8 @@ trainer:
   check_val_every_n_epoch: 10
   fast_dev_run: false
   accumulate_grad_batches: 4
+#  accumulate_grad_batches: 32
+#  accumulate_grad_batches: 64
   max_epochs: -1
   min_epochs: null
   max_steps: -1
@@ -71,10 +73,8 @@ trainer:
   move_metrics_to_cpu: false
   multiple_trainloader_mode: max_size_cycle
   inference_mode: true
-#ckpt_path: null
-#ckpt_path: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/aug_random_mix__epoch=265-step=140000.ckpt
-#ckpt_path: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/aug3__epoch=447-step=172000.ckpt
-ckpt_path: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/epoch=750-step=212000.ckpt
+ckpt_path: null
+#ckpt_path: /import/c4dm-datasets-ext/cm007/mdx_checkpoints/epoch=750-step=212000.ckpt
 model:
   class_path: aimless.lightning.waveform.WaveformSeparator
   init_args:
@@ -202,6 +202,7 @@ optimizer:
   class_path: torch.optim.Adam
   init_args:
     lr: 0.0003
+#    lr: 0.0001
     betas:
     - 0.9
     - 0.999
