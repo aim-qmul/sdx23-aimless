@@ -78,7 +78,7 @@ Other details:
 * During the last ~200 epochs, the learning rate is reduced to 0.001, gradient accumulation is increased to 64, and the effect randomization chance is increased by a factor of 1.666 (e.g. 30% to 50% etc.)
 
 After training, please go to our [submission repository](https://gitlab.aicrowd.com/yoyololicon/mdx23-submissions/) and checkout the tag `submission-cm-acc64-4d-lr001-e1213-last`.
-Then, copy the checkpoint to `my_submission/acc64_4devices_lr0001_e1213_last.ckpt ` in the submission repository.
+Then, copy the checkpoint to `my_submission/acc64_4devices_lr0001_e1213_last.ckpt` in the submission repository.
 After these steps, you have reproduced our submission!
 
 
