@@ -5,7 +5,8 @@
 </div>
 
 AIMLESS (Artificial Intelligence and Music League for Effective Source Separation) is a special interest group in audio source separation at C4DM, consisting of PhD students from the AIM CDT program.
-This repository contains our training code for the [SDX23 Sound Demixing Challenge](https://www.aicrowd.com/challenges/sound-demixing-challenge-2023).
+This repository is adapted from [Danna-Sep](https://github.com/yoyololicon/music-demixing-challenge-ismir-2021-entry) and
+ contains our training code for the [SDX23 Sound Demixing Challenge](https://www.aicrowd.com/challenges/sound-demixing-challenge-2023).
 
 
 ## Quick Start
