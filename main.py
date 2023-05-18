@@ -1,13 +1,11 @@
 import torch
 from pytorch_lightning.cli import LightningCLI
-from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary
 from pytorch_lightning.strategies import DDPStrategy
-
-from aimless.lightning.waveform import WaveformSeparator
-from aimless.lightning.freq_mask import MaskPredictor
 
 
 def cli_main():
+    torch.set_float32_matmul_precision("medium")
+
     cli = LightningCLI(
         trainer_defaults={
             "accelerator": "gpu",

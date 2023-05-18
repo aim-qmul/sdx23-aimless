@@ -2,7 +2,7 @@ from torchvision.transforms import Compose
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from typing import List
-
+import os
 
 from data.dataset import LabelNoiseBleed
 from data.augment import CPUBase
@@ -35,6 +35,11 @@ class LabelNoise(pl.LightningDataModule):
             self.transforms = Compose(transforms)
 
     def setup(self, stage=None):
+        label_noise_path = None
+        current_dir = os.path.dirname(os.path.realpath(__file__))
+        if "label_noise.csv" in os.listdir(current_dir):
+            label_noise_path = os.path.join(current_dir, "label_noise.csv")
+        assert label_noise_path is not None
         if stage == "fit":
             self.train_dataset = LabelNoiseBleed(
                 root=self.hparams.root,
@@ -44,25 +49,34 @@ class LabelNoise(pl.LightningDataModule):
                 random=self.hparams.random,
                 random_track_mix=self.hparams.random_track_mix,
                 transform=self.transforms,
+                clean_csv_path=label_noise_path,
             )
 
         if stage == "validate" or stage == "fit":
             self.val_dataset = LabelNoiseBleed(
                 root=self.hparams.root,
-                split="valid",
+                split="train",
                 seq_duration=self.hparams.seq_duration,
+                random=self.hparams.random,
+                random_track_mix=self.hparams.random_track_mix,
+                transform=self.transforms,
+                clean_csv_path=label_noise_path,
             )
 
     def train_dataloader(self):
         return DataLoader(
             self.train_dataset,
             batch_size=self.hparams.batch_size,
-            num_workers=4,
+            num_workers=8,
             shuffle=True,
             drop_last=True,
         )
 
     def val_dataloader(self):
         return DataLoader(
-            self.val_dataset, batch_size=self.hparams.batch_size, num_workers=4
+            self.val_dataset,
+            batch_size=self.hparams.batch_size,
+            num_workers=8,
+            shuffle=False,
+            drop_last=True,
         )

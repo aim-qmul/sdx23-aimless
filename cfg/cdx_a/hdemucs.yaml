@@ -1,0 +1,202 @@
+# pytorch_lightning==1.8.5.post0
+seed_everything: 2434
+trainer:
+  logger: true
+  enable_checkpointing: true
+  callbacks:
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: null
+      filename: null
+      monitor: null
+      verbose: false
+      save_last: true
+      save_top_k: 1
+      save_weights_only: false
+      mode: min
+      auto_insert_metric_name: true
+      every_n_train_steps: 2000
+      train_time_interval: null
+      every_n_epochs: null
+      save_on_train_epoch_end: null
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: null
+      filename: null
+      monitor: null
+      verbose: false
+      save_last: null
+      save_top_k: -1
+      save_weights_only: true
+      mode: min
+      auto_insert_metric_name: true
+      every_n_train_steps: 2000
+      train_time_interval: null
+      every_n_epochs: null
+      save_on_train_epoch_end: null
+  - class_path: pytorch_lightning.callbacks.ModelSummary
+    init_args:
+      max_depth: 2
+  default_root_dir: null
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  num_nodes: 1
+  num_processes: null
+  devices: null
+  gpus: null
+  auto_select_gpus: false
+  tpu_cores: null
+  ipus: null
+  enable_progress_bar: true
+  overfit_batches: 0.0
+  track_grad_norm: -1
+  check_val_every_n_epoch: 1
+  fast_dev_run: false
+  accumulate_grad_batches: 4
+  max_epochs: null
+  min_epochs: null
+  max_steps: 30000
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: 0
+  limit_test_batches: null
+  limit_predict_batches: null
+  val_check_interval: null
+  log_every_n_steps: 1
+  accelerator: gpu
+  strategy: ddp
+  sync_batchnorm: false
+  precision: 32
+  enable_model_summary: true
+  num_sanity_val_steps: 0
+  resume_from_checkpoint: null
+  profiler: null
+  benchmark: null
+  deterministic: null
+  reload_dataloaders_every_n_epochs: 0
+  auto_lr_find: false
+  replace_sampler_ddp: true
+  detect_anomaly: false
+  auto_scale_batch_size: false
+  plugins: null
+  amp_backend: native
+  amp_level: null
+  move_metrics_to_cpu: false
+  multiple_trainloader_mode: max_size_cycle
+  inference_mode: true
+ckpt_path: null
+model:
+  class_path: aimless.lightning.waveform.WaveformSeparator
+  init_args:
+    model:
+      class_path: torchaudio.models.HDemucs
+      init_args:
+        sources:
+        - music
+        - sfx
+        - speech
+        audio_channels: 1
+        channels: 64
+        growth: 2
+        nfft: 4096
+        depth: 6
+        freq_emb: 0.2
+        emb_scale: 10
+        emb_smooth: true
+        kernel_size: 8
+        time_stride: 2
+        stride: 4
+        context: 1
+        context_enc: 0
+        norm_starts: 4
+        norm_groups: 4
+        dconv_depth: 2
+        dconv_comp: 4
+        dconv_attn: 4
+        dconv_lstm: 4
+        dconv_init: 0.0001
+    criterion:
+      class_path: aimless.loss.time.NegativeSDR
+    transforms:
+    - class_path: aimless.augment.SpeedPerturb
+      init_args:
+        orig_freq: 44100
+        speeds:
+        - 50
+        - 60
+        - 70
+        - 80
+        - 90
+        - 100
+        - 110
+        - 120
+        - 130
+        - 140
+        - 150
+        p: 0.3
+    - class_path: aimless.augment.RandomPitch
+      init_args:
+        semitones:
+        - -7
+        - -6
+        - -5
+        - -4
+        - -3
+        - -2
+        - -1
+        - 1
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        n_fft: 2048
+        hop_length: 512
+        p: 0.3
+    use_sdx_targets: false
+    target_track: sdx
+    targets:
+      music: null
+      sfx: null
+      speech: null
+data:
+  class_path: data.lightning.DnR
+  init_args:
+    root: /import/c4dm-datasets-ext/sdx-2023/dnr_v2/dnr_v2/
+    seq_duration: 6.0
+    samples_per_track: 144
+    random: true
+    include_val: true
+    random_track_mix: true
+    transforms:
+    - class_path: data.augment.RandomGain
+      init_args:
+        low: 0.25
+        high: 1.25
+        p: 1.0
+    - class_path: data.augment.RandomFlipPhase
+      init_args:
+        p: 0.5
+    - class_path: data.augment.RandomSwapLR
+      init_args:
+        p: 0.5
+    batch_size: 3
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.0003
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    weight_decay: 0
+    amsgrad: false
+    foreach: null
+    maximize: false
+    capturable: false
+    differentiable: false
+    fused: false

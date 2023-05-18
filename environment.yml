@@ -12,7 +12,7 @@ dependencies:
   - torchvision
   - cudatoolkit=11.7
   - pip:
-    - pytorch-lightning[extra]
+    - pytorch-lightning[extra]==1.9.4
     - torch-optimizer
     - musdb
     - git+https://github.com/yoyololicon/norbert
