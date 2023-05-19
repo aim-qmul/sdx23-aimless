@@ -216,3 +216,5 @@ build/
 dist/
 .idea/
 out/
+env/
+.vscode
