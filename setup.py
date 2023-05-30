@@ -7,6 +7,7 @@ setuptools.setup(
     author_email="chin-yun.yu@qmul.ac.uk",
     packages=setuptools.find_packages(exclude=["tests", "tests.*", "data", "data.*"]),
     install_requires=["torch", "pytorch-lightning", "torch_fftconv"],
+    extras_require={"dev": ["pytest", "pytest-mock"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
